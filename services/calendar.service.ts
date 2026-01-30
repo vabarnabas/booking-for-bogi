@@ -128,6 +128,7 @@ async function createEvent(
       .insert(customers)
       .values({
         name: name,
+        phoneNumber: "N/A",
       })
       .returning();
     userId = insertedUser[0].id;

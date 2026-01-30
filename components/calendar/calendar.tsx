@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import React from "react";
 import { cn } from "@/lib/utils";
 
@@ -7,12 +8,10 @@ export default function Calendar({
   onDaySelect?: (date: Date) => void;
 }) {
   const [selectedDay, setSelectedDay] = React.useState<number | null>(null);
-  const [currentYear, _setCurrentYear] = React.useState(
+  const [currentYear, setCurrentYear] = React.useState(
     new Date().getFullYear(),
   );
-  const [currentMonth, _setCurrentMonth] = React.useState(
-    new Date().getMonth(),
-  );
+  const [currentMonth, setCurrentMonth] = React.useState(new Date().getMonth());
   const [numberOfDays, setNumberOfDays] = React.useState(0);
 
   React.useEffect(() => {
@@ -21,25 +20,59 @@ export default function Calendar({
 
   return (
     <div>
-      <div className="flex justify-center font-semibold text-lg">
-        {currentYear}{" "}
-        {
-          [
-            "Január",
-            "Február",
-            "Március",
-            "Április",
-            "Május",
-            "Június",
-            "Július",
-            "Augusztus",
-            "Szeptember",
-            "Október",
-            "November",
-            "December",
-          ][currentMonth]
-        }
+      <div className="flex items-center justify-center gap-x-4">
+        <button
+          type="button"
+          onClick={() => {
+            if (currentMonth === 0) {
+              setCurrentMonth(11);
+              setCurrentYear(currentYear - 1);
+            } else {
+              setCurrentMonth(currentMonth - 1);
+            }
+          }}
+          disabled={currentMonth === new Date().getMonth()}
+          className="disabled:cursor-not-allowed disabled:text-muted-foreground/30"
+        >
+          <ChevronLeft className="size-5" />
+        </button>
+        <p className="font-semibold text-lg">
+          {currentYear}{" "}
+          {
+            [
+              "Január",
+              "Február",
+              "Március",
+              "Április",
+              "Május",
+              "Június",
+              "Július",
+              "Augusztus",
+              "Szeptember",
+              "Október",
+              "November",
+              "December",
+            ][currentMonth]
+          }
+        </p>
+        <button
+          type="button"
+          disabled={!(currentMonth <= new Date().getMonth() + 2)}
+          onClick={() => {
+            if (currentMonth === 11) {
+              setCurrentMonth(0);
+              setCurrentYear(currentYear + 1);
+            } else {
+              setCurrentMonth(currentMonth + 1);
+            }
+          }}
+          className="disabled:cursor-not-allowed disabled:text-muted-foreground/30"
+        >
+          <ChevronRight className="size-5" />
+        </button>
       </div>
+      {currentMonth}
+      {currentYear}
       <div className="mt-6 grid grid-cols-7 content-center items-center gap-y-3">
         {Array.from({ length: numberOfDays }, (_, i) => i + 1).map((day) => (
           <button

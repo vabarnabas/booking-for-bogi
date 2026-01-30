@@ -417,22 +417,20 @@ export default function BookingForm() {
                   ))}
               </>
             ) : null}
-            <p className="text-lg">
-              Teljes Ár:{" "}
-              <span className="font-semibold">
-                {Intl.NumberFormat("hu-HU", {
-                  style: "currency",
-                  currency: "HUF",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                }).format(totalCost)}
-              </span>
-            </p>
-            <p className="text-lg">
-              Teljes Idő:{" "}
-              <span className="font-semibold">{totalTime} perc</span>
-            </p>
-
+            <div className="rounded-md bg-secondary p-4">
+              <p className="mb-2 font-bold text-xl">Foglalás Adatai</p>
+              <div className="grid grid-cols-2 gap-2">
+                <p className="font-semibold">
+                  {Intl.NumberFormat("hu-HU", {
+                    style: "currency",
+                    currency: "HUF",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(totalCost)}
+                </p>
+                <p className="font-semibold">{totalTime} perc</p>
+              </div>
+            </div>
             <Button
               type="button"
               size={"lg"}
@@ -553,6 +551,14 @@ export default function BookingForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="name">Név</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Telefonszám</Label>
             <Input
               id="name"
               value={name}
