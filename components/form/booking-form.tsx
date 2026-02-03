@@ -1,170 +1,178 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import React from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { cn, formatDateTime, getTimeFromDate } from "@/lib/utils";
+import type z from "zod";
+import { createAppointment } from "@/actions/appointments";
+import {
+  cn,
+  formatCurrency,
+  formatDateTime,
+  generateAppointmentNotes,
+  getTimeFromDate,
+} from "@/lib/utils";
+import { bookingFormSchema } from "@/types/form.types";
+import type { Service } from "@/types/service.types";
 import Calendar from "../calendar/calendar";
 import { Button } from "../ui/button";
+import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-
-interface Service {
-  name: string;
-  category: "top-level" | "type" | "size" | "decoration" | "extra";
-  price: number | null;
-  timeFrame: number | null;
-  image?: string;
-  optionCount?: number;
-}
 
 const services: Service[] = [
   {
     name: "Manikűr",
-    category: "top-level",
+    type: "top-level",
     price: null,
-    timeFrame: null,
+    duration: null,
     image: "/photos/manicure.jpg",
     optionCount: 1,
   },
   {
     name: "Műkörömépítés",
-    category: "top-level",
+    type: "top-level",
     price: null,
-    timeFrame: null,
+    duration: null,
     optionCount: 3,
   },
   {
     name: "Férfi Manikűr",
-    category: "type",
+    type: "type",
     price: 4000,
-    timeFrame: 30,
+    duration: 30,
   },
   {
     name: "Géllakk",
-    category: "top-level",
+    type: "top-level",
     price: 7000,
-    timeFrame: 60,
+    duration: 60,
     optionCount: 2,
   },
   {
     name: "Női Manikűr",
-    category: "type",
+    type: "type",
     price: 4000,
-    timeFrame: 30,
+    duration: 30,
   },
   {
     name: "Japán Manikűr",
-    category: "type",
+    type: "type",
     price: 5500,
-    timeFrame: 45,
+    duration: 45,
   },
   {
     name: "S Méret",
-    category: "size",
+    type: "size",
     price: 8000,
-    timeFrame: 90,
+    duration: 90,
   },
   {
     name: "S/M Méret",
-    category: "size",
+    type: "size",
     price: 8500,
-    timeFrame: 90,
+    duration: 90,
   },
   {
     name: "M Méret",
-    category: "size",
+    type: "size",
     price: 9000,
-    timeFrame: 90,
+    duration: 90,
   },
   {
     name: "M/L Méret",
-    category: "size",
+    type: "size",
     price: 9500,
-    timeFrame: 120,
+    duration: 120,
   },
   {
     name: "L Méret",
-    category: "size",
+    type: "size",
     price: 10000,
-    timeFrame: 120,
+    duration: 120,
   },
   {
     name: "XL Méret",
-    category: "size",
+    type: "size",
     price: 11000,
-    timeFrame: 150,
+    duration: 150,
   },
   {
     name: "Beépített Francia",
-    category: "decoration",
+    type: "decoration",
     price: 2500,
-    timeFrame: 40,
+    duration: 40,
   },
   {
     name: "Francia Festés",
-    category: "decoration",
+    type: "decoration",
     price: 1000,
-    timeFrame: 20,
+    duration: 20,
   },
   {
     name: "Babyboomer",
-    category: "decoration",
+    type: "decoration",
     price: 1000,
-    timeFrame: 10,
+    duration: 10,
   },
   {
     name: "Kis Díszítés",
-    category: "decoration",
+    type: "decoration",
     price: 1000,
-    timeFrame: 15,
+    duration: 15,
   },
   {
     name: "Közepes Díszítés",
-    category: "decoration",
+    type: "decoration",
     price: 1500,
-    timeFrame: 25,
+    duration: 25,
   },
   {
     name: "Nagy Díszítés",
-    category: "decoration",
+    type: "decoration",
     price: 2500,
-    timeFrame: 35,
+    duration: 35,
   },
   {
     name: "Nem kérek extra díszítést",
-    category: "decoration",
+    type: "decoration",
     price: 0,
-    timeFrame: 0,
+    duration: 0,
   },
   {
     name: "Van Más Munkája a Körmömön",
-    category: "extra",
+    type: "extra",
     price: 3000,
-    timeFrame: 30,
+    duration: 30,
   },
   {
     name: "Nincs Más Munkája a Körmömön",
-    category: "extra",
+    type: "extra",
     price: 0,
-    timeFrame: 0,
+    duration: 0,
   },
 ];
 
 export default function BookingForm() {
+  const form = useForm<z.infer<typeof bookingFormSchema>>({
+    resolver: zodResolver(bookingFormSchema),
+    defaultValues: {
+      options: [],
+    },
+  });
+
+  const service = form.watch("service");
+  const options = form.watch("options");
+
   const [selectedTopLevelService, setSelectedTopLevelService] = React.useState<
     string | null
   >(null);
   const [selectedServices, setSelectedServices] = React.useState<Service[]>([]);
 
   const selectServiceByCategory = (service: Service) => {
-    if (selectedServices.find((s) => s.category === service.category)) {
-      setSelectedServices((prev) =>
-        prev.map((s) => (s.category === service.category ? service : s)),
-      );
-    } else {
-      setSelectedServices((prev) => [...prev, service]);
-    }
+    const filtered = options.filter((s) => s.type !== service.type);
+    form.setValue("options", [...filtered, service]);
   };
   const [timeSlots, setTimeSlots] = React.useState<
     { start: string; end: string }[]
@@ -180,45 +188,71 @@ export default function BookingForm() {
 
   const totalCost = React.useMemo(() => {
     return (
-      (services.find((service) => service.name === selectedTopLevelService)
-        ?.price || 0) +
-      selectedServices.reduce((acc, service) => {
+      (services.find((s) => s.name === service)?.price || 0) +
+      options.reduce((acc, service) => {
         return acc + (service.price || 0);
       }, 0)
     );
-  }, [selectedServices, selectedTopLevelService]);
+  }, [options, service]);
 
   const totalTime = React.useMemo(() => {
     return (
-      (services.find((service) => service.name === selectedTopLevelService)
-        ?.timeFrame || 0) +
-      selectedServices.reduce((acc, service) => {
-        return acc + (service.timeFrame || 0);
+      (services.find((s) => s.name === service)?.duration || 0) +
+      0 +
+      options.reduce((acc, service) => {
+        return acc + (service.duration || 0);
       }, 0)
     );
-  }, [selectedServices, selectedTopLevelService]);
+  }, [options, service]);
+
+  const onSubmit = async (data: z.infer<typeof bookingFormSchema>) => {
+    console.log("Submitting booking form with data:", data);
+    const toastId = toast.loading("Foglalás folyamatban...");
+    try {
+      await createAppointment({
+        name: data.name,
+        service: data.service,
+        notes: generateAppointmentNotes(
+          data.service,
+          data.options.map((s) => s.name),
+          totalCost,
+          totalTime,
+        ),
+        startDate: data.timeSlot.start,
+        timeFrame: totalTime,
+      });
+      toast.success("Sikeres foglalás!", { id: toastId });
+    } catch {
+      toast.error("Hiba történt a foglalás során.", { id: toastId });
+    }
+  };
+  form.watch();
 
   return (
-    <form action="" className="w-full max-w-md">
+    <form
+      id="booking-form"
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="w-full max-w-md"
+    >
       {formPage === 0 ? (
         <>
           <p className="mb-4 font-bold text-3xl">Válassz szolgáltatást!</p>
           <div className="flex flex-col space-y-4">
             {services
-              .filter((service) => service.category === "top-level")
+              .filter((service) => service.type === "top-level")
               .map((service) => (
                 <button
                   key={service.name}
                   type="button"
                   onClick={() => {
-                    if (service.name !== selectedTopLevelService) {
-                      setSelectedServices([]);
+                    if (service.name !== form.getValues("service")) {
+                      form.setValue("options", []);
                     }
-                    setSelectedTopLevelService(service.name);
+                    form.setValue("service", service.name);
                   }}
                   className={cn(
                     "flex items-center gap-x-4 rounded-md border p-3",
-                    selectedTopLevelService === service.name
+                    form.getValues("service") === service.name
                       ? "border-primary bg-primary/10"
                       : "bg-secondary/30",
                   )}
@@ -239,15 +273,8 @@ export default function BookingForm() {
                     <p className="font-semibold text-xl">{service.name}</p>
                     {service.price ? (
                       <p className="text-lg text-muted-foreground">
-                        {Intl.NumberFormat("hu-HU", {
-                          style: "currency",
-                          currency: "HUF",
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        }).format(service.price as number)}
-                        {service.timeFrame
-                          ? ` - ${service.timeFrame} perc`
-                          : ""}
+                        {formatCurrency(service.price as number)}
+                        {service.duration ? ` - ${service.duration} perc` : ""}
                       </p>
                     ) : (
                       <p className=""></p>
@@ -255,11 +282,11 @@ export default function BookingForm() {
                   </div>
                 </button>
               ))}
-            {selectedTopLevelService === "Manikűr" ? (
+            {form.getValues("service") === "Manikűr" ? (
               <>
                 <p className="font-semibold text-2xl">Szolgáltatás Tipusa</p>
                 {services
-                  .filter((service) => service.category === "type")
+                  .filter((service) => service.type === "type")
                   .map((service) => (
                     <button
                       key={service.name}
@@ -267,9 +294,8 @@ export default function BookingForm() {
                       onClick={() => selectServiceByCategory(service)}
                       className={cn(
                         "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
-                        selectedServices.find(
-                          (s) =>
-                            s.category === "type" && s.name === service.name,
+                        options.find(
+                          (s) => s.type === "type" && s.name === service.name,
                         )
                           ? "border-primary bg-primary/10"
                           : "",
@@ -279,14 +305,9 @@ export default function BookingForm() {
                       <div className="flex w-full flex-col items-start">
                         <p className="font-semibold text-xl">{service.name}</p>
                         <p className="text-lg text-muted-foreground">
-                          {Intl.NumberFormat("hu-HU", {
-                            style: "currency",
-                            currency: "HUF",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(service.price as number)}
-                          {service.timeFrame
-                            ? ` - ${service.timeFrame} perc`
+                          {formatCurrency(service.price as number)}
+                          {service.duration
+                            ? ` - ${service.duration} perc`
                             : ""}
                         </p>
                       </div>
@@ -295,11 +316,11 @@ export default function BookingForm() {
               </>
             ) : null}
 
-            {selectedTopLevelService === "Műkörömépítés" ? (
+            {form.getValues("service") === "Műkörömépítés" ? (
               <>
                 <p className="font-semibold text-2xl">Válassz Méretet!</p>
                 {services
-                  .filter((service) => service.category === "size")
+                  .filter((service) => service.type === "size")
                   .map((service) => (
                     <button
                       key={service.name}
@@ -307,9 +328,8 @@ export default function BookingForm() {
                       onClick={() => selectServiceByCategory(service)}
                       className={cn(
                         "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
-                        selectedServices.find(
-                          (s) =>
-                            s.category === "size" && s.name === service.name,
+                        options.find(
+                          (s) => s.type === "size" && s.name === service.name,
                         )
                           ? "border-primary bg-primary/10"
                           : "",
@@ -319,14 +339,9 @@ export default function BookingForm() {
                       <div className="flex w-full flex-col items-start">
                         <p className="font-semibold text-xl">{service.name}</p>
                         <p className="text-lg text-muted-foreground">
-                          {Intl.NumberFormat("hu-HU", {
-                            style: "currency",
-                            currency: "HUF",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(service.price as number)}
-                          {service.timeFrame
-                            ? ` - ${service.timeFrame} perc`
+                          {formatCurrency(service.price as number)}
+                          {service.duration
+                            ? ` - ${service.duration} perc`
                             : ""}
                         </p>
                       </div>
@@ -334,12 +349,12 @@ export default function BookingForm() {
                   ))}
               </>
             ) : null}
-            {selectedTopLevelService === "Műkörömépítés" ||
-            selectedTopLevelService === "Géllakk" ? (
+            {form.getValues("service") === "Műkörömépítés" ||
+            form.getValues("service") === "Géllakk" ? (
               <>
                 <p className="font-semibold text-2xl">Válassz Diszitést!</p>
                 {services
-                  .filter((service) => service.category === "decoration")
+                  .filter((service) => service.type === "decoration")
                   .map((service) => (
                     <button
                       key={service.name}
@@ -347,10 +362,9 @@ export default function BookingForm() {
                       onClick={() => selectServiceByCategory(service)}
                       className={cn(
                         "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
-                        selectedServices.find(
+                        options.find(
                           (s) =>
-                            s.category === "decoration" &&
-                            s.name === service.name,
+                            s.type === "decoration" && s.name === service.name,
                         )
                           ? "border-primary bg-primary/10"
                           : "",
@@ -360,14 +374,9 @@ export default function BookingForm() {
                       <div className="flex w-full flex-col items-start">
                         <p className="font-semibold text-xl">{service.name}</p>
                         <p className="text-lg text-muted-foreground">
-                          {Intl.NumberFormat("hu-HU", {
-                            style: "currency",
-                            currency: "HUF",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(service.price as number)}
-                          {service.timeFrame
-                            ? ` - ${service.timeFrame} perc`
+                          {formatCurrency(service.price as number)}
+                          {service.duration
+                            ? ` - ${service.duration} perc`
                             : ""}
                         </p>
                       </div>
@@ -375,14 +384,14 @@ export default function BookingForm() {
                   ))}
               </>
             ) : null}
-            {selectedTopLevelService === "Műkörömépítés" ||
-            selectedTopLevelService === "Géllakk" ? (
+            {form.getValues("service") === "Műkörömépítés" ||
+            form.getValues("service") === "Géllakk" ? (
               <>
                 <p className="font-semibold text-2xl">
                   Válassz Extra Szolgáltatást!
                 </p>
                 {services
-                  .filter((service) => service.category === "extra")
+                  .filter((service) => service.type === "extra")
                   .map((service) => (
                     <button
                       key={service.name}
@@ -390,9 +399,8 @@ export default function BookingForm() {
                       onClick={() => selectServiceByCategory(service)}
                       className={cn(
                         "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
-                        selectedServices.find(
-                          (s) =>
-                            s.category === "extra" && s.name === service.name,
+                        options.find(
+                          (s) => s.type === "extra" && s.name === service.name,
                         )
                           ? "border-primary bg-primary/10"
                           : "",
@@ -402,14 +410,9 @@ export default function BookingForm() {
                       <div className="flex w-full flex-col items-start">
                         <p className="font-semibold text-xl">{service.name}</p>
                         <p className="text-lg text-muted-foreground">
-                          {Intl.NumberFormat("hu-HU", {
-                            style: "currency",
-                            currency: "HUF",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(service.price as number)}
-                          {service.timeFrame
-                            ? ` - ${service.timeFrame} perc`
+                          {formatCurrency(service.price as number)}
+                          {service.duration
+                            ? ` - ${service.duration} perc`
                             : ""}
                         </p>
                       </div>
@@ -420,14 +423,7 @@ export default function BookingForm() {
             <div className="rounded-md bg-secondary p-4">
               <p className="mb-2 font-bold text-xl">Foglalás Adatai</p>
               <div className="grid grid-cols-2 gap-2">
-                <p className="font-semibold">
-                  {Intl.NumberFormat("hu-HU", {
-                    style: "currency",
-                    currency: "HUF",
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }).format(totalCost)}
-                </p>
+                <p className="font-semibold">{formatCurrency(totalCost)}</p>
                 <p className="font-semibold">{totalTime} perc</p>
               </div>
             </div>
@@ -436,17 +432,13 @@ export default function BookingForm() {
               size={"lg"}
               disabled={
                 !(
-                  selectedTopLevelService &&
+                  service &&
                   services.find(
-                    (s) =>
-                      s.category === "top-level" &&
-                      s.name === selectedTopLevelService,
+                    (s) => s.type === "top-level" && s.name === service,
                   )?.optionCount &&
                   services.find(
-                    (s) =>
-                      s.category === "top-level" &&
-                      s.name === selectedTopLevelService,
-                  )?.optionCount === selectedServices.length
+                    (s) => s.type === "top-level" && s.name === service,
+                  )?.optionCount === options.length
                 )
               }
               onClick={() => setFormPage((prev) => prev + 1)}
@@ -461,7 +453,7 @@ export default function BookingForm() {
           <div className="mb-6 space-y-1 rounded-md bg-secondary p-3">
             <p className="mb-2 font-bold text-xl">Foglalás Adatai</p>
 
-            <p className="">{`${selectedTopLevelService} (${selectedServices.map((service) => service.name).join(", ")})`}</p>
+            <p className="">{`${service} (${options.map((service) => service.name).join(", ")})`}</p>
             <div className="grid grid-cols-2 content-center gap-2">
               <p className="font-semibold">{totalTime} perc</p>
               <p className="font-semibold">
@@ -507,7 +499,7 @@ export default function BookingForm() {
                   <Button
                     type="button"
                     onClick={() => {
-                      setSelectedTimeSlot(slot);
+                      form.setValue("timeSlot", slot);
                       setFormPage(2);
                     }}
                     key={slot.start}
@@ -524,7 +516,7 @@ export default function BookingForm() {
         <div className="">
           <div className="mb-6 space-y-1 rounded-md bg-secondary p-3">
             <p className="mb-2 font-bold text-xl">Foglalás Adatai</p>
-            <p className="">{`${selectedTopLevelService} (${selectedServices.map((service) => service.name).join(", ")})`}</p>
+            <p className="">{`${service} (${options.map((service) => service.name).join(", ")})`}</p>
             <div className="">
               <div className="grid grid-cols-2">
                 <p className="font-semibold">{totalTime} perc</p>
@@ -539,67 +531,63 @@ export default function BookingForm() {
               </div>
             </div>
             <p className="mt-4 rounded bg-primary/80 p-2 font-bold">
-              {formatDateTime(new Date(selectedTimeSlot?.start || ""))}
+              {formatDateTime(
+                new Date(form.getValues("timeSlot")?.start || ""),
+              )}
               {" - "}
               {getTimeFromDate(
                 new Date(
-                  new Date(selectedTimeSlot?.start || "").getTime() +
+                  new Date(form.getValues("timeSlot")?.start || "").getTime() +
                     totalTime * 60000,
                 ),
               )}
             </p>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="name">Név</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+            <Controller
+              control={form.control}
+              name="name"
+              render={({ field, fieldState }) => (
+                <Field aria-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="booking-form-name">Név</FieldLabel>
+                  <Input
+                    id="booking-form-name"
+                    {...field}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="name">Telefonszám</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+            <Controller
+              control={form.control}
+              name="phoneNumber"
+              render={({ field, fieldState }) => (
+                <Field aria-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="booking-form-phone-number">
+                    Telefonszám
+                  </FieldLabel>
+                  <Input
+                    id="booking-form-phone-number"
+                    {...field}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
             />
           </div>
           <Button
-            disabled={!name}
-            onClick={async () => {
-              const toastId = toast.loading("Foglalás folyamatban...");
-              try {
-                await fetch("/api/calendar/events", {
-                  method: "POST",
-                  body: JSON.stringify({
-                    service: selectedTopLevelService,
-                    name: name,
-                    startDate: selectedTimeSlot?.start,
-                    description: `
-**Kiválasztott szolgáltatás:** ${selectedTopLevelService}\n
-**Kiválasztott opciók:**
-${selectedServices.map((s) => `- ${s.name}`).join("\n")}
-
-**Teljes ár:** ${Intl.NumberFormat("hu-HU", {
-                      style: "currency",
-                      currency: "HUF",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(totalCost)}
-                
-                
-**Teljes idő:** ${totalTime} perc`,
-                    timeFrame: totalTime,
-                  }),
-                });
-                toast.success("Sikeres foglalás!", { id: toastId });
-              } catch {
-                toast.error("Hiba történt a foglalás során.", { id: toastId });
-              }
-            }}
+            disabled={!form.getValues("name") || !form.getValues("phoneNumber")}
             size="lg"
             className="mt-4 w-full"
+            type="submit"
+            form="booking-form"
           >
             Foglalás
           </Button>

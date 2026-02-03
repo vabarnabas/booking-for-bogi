@@ -17,3 +17,35 @@ export function formatDateTime(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");
   return `${year}.${month}.${day} ${getTimeFromDate(date)}`;
 }
+
+export function generateAppointmentNotes(
+  service: string,
+  selectedServiceNames: string[],
+  totalCost: number,
+  totalTime: number,
+): string {
+  return `
+**Kiválasztott szolgáltatás:** ${service}
+
+**Kiválasztott opciók:**
+${selectedServiceNames.map((s) => `- ${s}`).join("\n")}
+
+**Teljes ár:** ${Intl.NumberFormat("hu-HU", {
+    style: "currency",
+    currency: "HUF",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(totalCost)}
+                
+                
+**Teljes idő:** ${totalTime} perc`;
+}
+
+export function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("hu-HU", {
+    style: "currency",
+    currency: "HUF",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
