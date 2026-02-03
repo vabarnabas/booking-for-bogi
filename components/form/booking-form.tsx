@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -10,12 +11,12 @@ import { createAppointment } from "@/actions/appointments";
 import {
   cn,
   formatCurrency,
-  formatDateTime,
   generateAppointmentNotes,
   getTimeFromDate,
 } from "@/lib/utils";
 import { bookingFormSchema } from "@/types/form.types";
 import type { Service } from "@/types/service.types";
+import BookingDetails from "../booking-details/booking-details";
 import Calendar from "../calendar/calendar";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
@@ -165,11 +166,6 @@ export default function BookingForm() {
   const service = form.watch("service");
   const options = form.watch("options");
 
-  const [selectedTopLevelService, setSelectedTopLevelService] = React.useState<
-    string | null
-  >(null);
-  const [selectedServices, setSelectedServices] = React.useState<Service[]>([]);
-
   const selectServiceByCategory = (service: Service) => {
     const filtered = options.filter((s) => s.type !== service.type);
     form.setValue("options", [...filtered, service]);
@@ -177,14 +173,8 @@ export default function BookingForm() {
   const [timeSlots, setTimeSlots] = React.useState<
     { start: string; end: string }[]
   >([]);
-  const [selectedTimeSlot, setSelectedTimeSlot] = React.useState<{
-    start: string;
-    end: string;
-  } | null>(null);
 
   const [formPage, setFormPage] = React.useState(0);
-
-  const [name, setName] = React.useState("");
 
   const totalCost = React.useMemo(() => {
     return (
@@ -226,6 +216,7 @@ export default function BookingForm() {
       toast.error("Hiba történt a foglalás során.", { id: toastId });
     }
   };
+
   form.watch();
 
   return (
@@ -236,7 +227,7 @@ export default function BookingForm() {
     >
       {formPage === 0 ? (
         <>
-          <p className="mb-4 font-bold text-3xl">Válassz szolgáltatást!</p>
+          <p className="mb-6 font-bold text-3xl">Válassz szolgáltatást!</p>
           <div className="flex flex-col space-y-4">
             {services
               .filter((service) => service.type === "top-level")
@@ -420,13 +411,13 @@ export default function BookingForm() {
                   ))}
               </>
             ) : null}
-            <div className="rounded-md bg-secondary p-4">
-              <p className="mb-2 font-bold text-xl">Foglalás Adatai</p>
-              <div className="grid grid-cols-2 gap-2">
-                <p className="font-semibold">{formatCurrency(totalCost)}</p>
-                <p className="font-semibold">{totalTime} perc</p>
-              </div>
-            </div>
+            <BookingDetails
+              formPage={formPage}
+              options={options}
+              service={service}
+              totalTime={totalTime}
+              totalCost={totalCost}
+            />
             <Button
               type="button"
               size={"lg"}
@@ -450,22 +441,24 @@ export default function BookingForm() {
       ) : null}
       {formPage === 1 ? (
         <div className="">
-          <div className="mb-6 space-y-1 rounded-md bg-secondary p-3">
-            <p className="mb-2 font-bold text-xl">Foglalás Adatai</p>
-
-            <p className="">{`${service} (${options.map((service) => service.name).join(", ")})`}</p>
-            <div className="grid grid-cols-2 content-center gap-2">
-              <p className="font-semibold">{totalTime} perc</p>
-              <p className="font-semibold">
-                {Intl.NumberFormat("hu-HU", {
-                  style: "currency",
-                  currency: "HUF",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                }).format(totalCost)}
-              </p>
-            </div>
+          <div className="mb-2">
+            <Button
+              onClick={() => setFormPage((prev) => prev - 1)}
+              variant="link"
+            >
+              <ArrowLeft />
+              Vissza
+            </Button>
           </div>
+          <BookingDetails
+            formPage={formPage}
+            options={options}
+            service={service}
+            totalTime={totalTime}
+            totalCost={totalCost}
+            startDate={form.getValues("timeSlot")?.start || undefined}
+          />
+          <p className="mb-4 font-bold text-3xl">Válassz időpontot!</p>
           <Calendar
             onDaySelect={async (date) => {
               console.log("date", date);
@@ -514,37 +507,28 @@ export default function BookingForm() {
       ) : null}
       {formPage === 2 ? (
         <div className="">
-          <div className="mb-6 space-y-1 rounded-md bg-secondary p-3">
-            <p className="mb-2 font-bold text-xl">Foglalás Adatai</p>
-            <p className="">{`${service} (${options.map((service) => service.name).join(", ")})`}</p>
-            <div className="">
-              <div className="grid grid-cols-2">
-                <p className="font-semibold">{totalTime} perc</p>
-                <p className="font-semibold">
-                  {Intl.NumberFormat("hu-HU", {
-                    style: "currency",
-                    currency: "HUF",
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }).format(totalCost)}
-                </p>
-              </div>
-            </div>
-            <p className="mt-4 rounded bg-primary/80 p-2 font-bold">
-              {formatDateTime(
-                new Date(form.getValues("timeSlot")?.start || ""),
-              )}
-              {" - "}
-              {getTimeFromDate(
-                new Date(
-                  new Date(form.getValues("timeSlot")?.start || "").getTime() +
-                    totalTime * 60000,
-                ),
-              )}
-            </p>
+          <div className="mb-2">
+            <Button
+              onClick={() => {
+                setFormPage((prev) => prev - 1);
+                setTimeSlots([]);
+              }}
+              variant="link"
+            >
+              <ArrowLeft />
+              Vissza
+            </Button>
           </div>
+          <BookingDetails
+            formPage={formPage}
+            options={options}
+            service={service}
+            totalTime={totalTime}
+            totalCost={totalCost}
+            startDate={form.getValues("timeSlot")?.start || undefined}
+          />
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Controller
               control={form.control}
               name="name"
