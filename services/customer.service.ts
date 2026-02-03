@@ -6,6 +6,13 @@ async function getCustomers() {
   return customers;
 }
 
+async function getCustomerByPhoneNumber(phoneNumber: string) {
+  const customer = await db.query.customers.findFirst({
+    where: (customers, { eq }) => eq(customers.phoneNumber, phoneNumber),
+  });
+  return customer;
+}
+
 async function getCustomerById(id: string) {
   const customer = await db.query.customers.findFirst({
     where: (customers, { eq }) => eq(customers.id, id),
@@ -13,12 +20,17 @@ async function getCustomerById(id: string) {
   return customer;
 }
 
-async function createCustomer(name: string, phoneNumber: string) {
+async function createCustomer(
+  name: string,
+  phoneNumber: string,
+  email?: string,
+) {
   const insertedCustomer = await db
     .insert(customers)
     .values({
       name: name,
       phoneNumber: phoneNumber,
+      email: email,
     })
     .returning();
   return insertedCustomer[0];
@@ -27,5 +39,6 @@ async function createCustomer(name: string, phoneNumber: string) {
 export const CustomerService = {
   getCustomers,
   getCustomerById,
+  getCustomerByPhoneNumber,
   createCustomer,
 };

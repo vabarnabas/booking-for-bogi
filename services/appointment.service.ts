@@ -22,7 +22,7 @@ async function createAppointment({
   service: string;
   startDate: string;
   endDate: string;
-  notes?: string;
+  notes: string;
   eventId: string;
   customerId: string;
 }) {
@@ -30,7 +30,7 @@ async function createAppointment({
     name: service,
     startDate: new Date(startDate),
     endDate: new Date(endDate),
-    notes: notes || "",
+    notes: notes,
     eventId: eventId,
     customerId: customerId,
   });

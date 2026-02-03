@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { db } from "@/db";
+import { generateExtendedAppointmentNotes } from "@/lib/utils";
 import { AppointmentService } from "@/services/appointment.service";
 import { CustomerService } from "@/services/customer.service";
 import { createAppointmentSchema } from "@/types/appointment.types";
@@ -29,6 +29,21 @@ appointmentController.post(
       new Date(body.startDate).getTime() + (body.timeFrame || 30) * 60000,
     );
 
+    let customerId: string;
+
+    const customer = await CustomerService.getCustomerByPhoneNumber(
+      body.phoneNumber,
+    );
+
+    if (!customer) {
+      const newCustomer = await CustomerService.createCustomer(
+        body.name,
+        body.phoneNumber,
+        body.email,
+      );
+      customerId = newCustomer.id;
+    } else customerId = customer.id;
+
     const calendarResponse = await fetch(url, {
       method: "POST",
       body: JSON.stringify({
@@ -41,7 +56,7 @@ appointmentController.post(
         comments_enabled: true,
         attachemnts: [],
         title: body.service,
-        notes: body.notes || "Appointment created via API",
+        notes: generateExtendedAppointmentNotes(body.notes, customerId),
         who: body.name,
       }),
       headers: {
@@ -56,26 +71,12 @@ appointmentController.post(
 
     const calendarEvent = await calendarResponse.json();
 
-    let customerId: string;
-
-    const customer = await db.query.customers.findFirst({
-      where: (customers, { eq }) => eq(customers.name, body.name),
-    });
-
-    if (!customer) {
-      const newCustomer = await CustomerService.createCustomer(
-        body.name,
-        "N/A",
-      );
-      customerId = newCustomer.id;
-    } else customerId = customer.id;
-
     await AppointmentService.createAppointment({
       customerId,
       service: body.service,
       startDate: body.startDate,
       endDate: endDate.toISOString(),
-      notes: body.notes,
+      notes: generateExtendedAppointmentNotes(body.notes, customerId),
       eventId: calendarEvent.event.id,
     });
 

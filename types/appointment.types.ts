@@ -17,12 +17,15 @@ export type Appointment = z.infer<typeof appointmentSchema>;
 
 export const createAppointmentSchema = z.object({
   name: z.string(),
+  phoneNumber: z.string(),
+  email: z.string().optional(),
+
   service: z.string(),
   timeFrame: z.number(),
 
   startDate: z.string(),
 
-  notes: z.string().optional(),
+  notes: z.string(),
 });
 
 export type CreateAppointment = z.infer<typeof createAppointmentSchema>;

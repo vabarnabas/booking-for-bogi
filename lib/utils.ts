@@ -18,7 +18,7 @@ export function formatDateTime(date: Date): string {
   return `${year}.${month}.${day} ${getTimeFromDate(date)}`;
 }
 
-export function generateAppointmentNotes(
+export function generateBaseAppointmentNotes(
   service: string,
   selectedServiceNames: string[],
   totalCost: number,
@@ -39,6 +39,15 @@ ${selectedServiceNames.map((s) => `- ${s}`).join("\n")}
                 
                 
 **Teljes idő:** ${totalTime} perc`;
+}
+
+export function generateExtendedAppointmentNotes(
+  baseNote: string,
+  customerId: string,
+) {
+  return `${baseNote}
+  
+**Ügyfél:** [Link](${process.env.APP_URL}/dashboard/customers/${customerId})`;
 }
 
 export function formatCurrency(amount: number) {

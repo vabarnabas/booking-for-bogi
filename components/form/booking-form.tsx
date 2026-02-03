@@ -11,7 +11,7 @@ import { createAppointment } from "@/actions/appointments";
 import {
   cn,
   formatCurrency,
-  generateAppointmentNotes,
+  generateBaseAppointmentNotes,
   getTimeFromDate,
 } from "@/lib/utils";
 import { bookingFormSchema } from "@/types/form.types";
@@ -159,6 +159,9 @@ export default function BookingForm() {
   const form = useForm<z.infer<typeof bookingFormSchema>>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
+      name: "",
+      phoneNumber: "",
+      email: "",
       options: [],
     },
   });
@@ -201,8 +204,10 @@ export default function BookingForm() {
     try {
       await createAppointment({
         name: data.name,
+        phoneNumber: data.phoneNumber,
+        email: data.email,
         service: data.service,
-        notes: generateAppointmentNotes(
+        notes: generateBaseAppointmentNotes(
           data.service,
           data.options.map((s) => s.name),
           totalCost,
@@ -411,13 +416,15 @@ export default function BookingForm() {
                   ))}
               </>
             ) : null}
-            <BookingDetails
-              formPage={formPage}
-              options={options}
-              service={service}
-              totalTime={totalTime}
-              totalCost={totalCost}
-            />
+            <div className="mb-4">
+              <BookingDetails
+                formPage={formPage}
+                options={options}
+                service={service}
+                totalTime={totalTime}
+                totalCost={totalCost}
+              />
+            </div>
             <Button
               type="button"
               size={"lg"}
@@ -450,14 +457,16 @@ export default function BookingForm() {
               Vissza
             </Button>
           </div>
-          <BookingDetails
-            formPage={formPage}
-            options={options}
-            service={service}
-            totalTime={totalTime}
-            totalCost={totalCost}
-            startDate={form.getValues("timeSlot")?.start || undefined}
-          />
+          <div className="mb-6">
+            <BookingDetails
+              formPage={formPage}
+              options={options}
+              service={service}
+              totalTime={totalTime}
+              totalCost={totalCost}
+              startDate={form.getValues("timeSlot")?.start || undefined}
+            />
+          </div>
           <p className="mb-4 font-bold text-3xl">Válassz időpontot!</p>
           <Calendar
             onDaySelect={async (date) => {
@@ -519,22 +528,26 @@ export default function BookingForm() {
               Vissza
             </Button>
           </div>
-          <BookingDetails
-            formPage={formPage}
-            options={options}
-            service={service}
-            totalTime={totalTime}
-            totalCost={totalCost}
-            startDate={form.getValues("timeSlot")?.start || undefined}
-          />
-
+          <div className="mb-4">
+            <BookingDetails
+              formPage={formPage}
+              options={options}
+              service={service}
+              totalTime={totalTime}
+              totalCost={totalCost}
+              startDate={form.getValues("timeSlot")?.start || undefined}
+            />
+          </div>
+          <p className="mb-4 font-semibold text-2xl">Személyes Adatok</p>
           <div className="space-y-4">
             <Controller
               control={form.control}
               name="name"
               render={({ field, fieldState }) => (
                 <Field aria-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="booking-form-name">Név</FieldLabel>
+                  <FieldLabel htmlFor="booking-form-name">
+                    Név (kötelező)
+                  </FieldLabel>
                   <Input
                     id="booking-form-name"
                     {...field}
@@ -552,10 +565,27 @@ export default function BookingForm() {
               render={({ field, fieldState }) => (
                 <Field aria-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="booking-form-phone-number">
-                    Telefonszám
+                    Telefonszám (kötelező)
                   </FieldLabel>
                   <Input
                     id="booking-form-phone-number"
+                    {...field}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              control={form.control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <Field aria-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="booking-form-email">Email</FieldLabel>
+                  <Input
+                    id="booking-form-email"
                     {...field}
                     aria-invalid={fieldState.invalid}
                   />
