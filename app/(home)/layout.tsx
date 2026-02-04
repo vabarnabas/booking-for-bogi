@@ -3,5 +3,5 @@ export default function HomeLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="flex w-full grow px-6 pt-20 pb-6">{children}</div>;
+  return <div className="flex w-full grow px-6 pt-16 pb-6">{children}</div>;
 }

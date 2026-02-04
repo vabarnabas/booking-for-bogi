@@ -9,6 +9,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type z from "zod";
 import { createAppointment } from "@/actions/appointments";
+import { getTimeSlots } from "@/actions/calendar";
 import useSpinner from "@/hooks/useSpinner";
 import {
   cn,
@@ -476,24 +477,11 @@ export default function BookingForm() {
           <Calendar
             onDaySelect={async (date) => {
               startLoading();
-              const url = new URL(
-                "/api/calendar/timeslots",
-                window.location.origin,
-              );
 
-              url.searchParams.append(
-                "date",
+              const timeSlots = await getTimeSlots(
                 new Date(date).toISOString().split("T")[0],
+                totalTime,
               );
-              url.searchParams.append("timeFrame", totalTime.toString());
-
-              const response = await fetch(url);
-
-              if (!response.ok) {
-                throw new Error("Failed to fetch time slots");
-              }
-
-              const timeSlots = await response.json();
 
               setTimeSlots(timeSlots);
               stopLoading();
