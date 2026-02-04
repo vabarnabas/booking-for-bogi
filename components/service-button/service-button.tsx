@@ -17,7 +17,7 @@ export default function ServiceButton({
       type="button"
       onClick={() => (onClick ? onClick() : null)}
       className={cn(
-        "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
+        "flex w-full items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
         isSelected ? "border-primary bg-primary/10" : "",
       )}
     >

@@ -20,6 +20,7 @@ import ServiceButton from "../service-button/service-button";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
+import { Separator } from "../ui/separator";
 
 export default function BookingForm() {
   const router = useRouter();
@@ -67,7 +68,7 @@ export default function BookingForm() {
   }, [options, service]);
 
   const onSubmit = async (data: z.infer<typeof bookingFormSchema>) => {
-    console.log("Submitting booking form with data:", data);
+    startLoading();
     const toastId = toast.loading("Foglalás folyamatban...");
     try {
       const appointment = await createAppointment({
@@ -88,6 +89,8 @@ export default function BookingForm() {
       router.push(`/appointments/${appointment.id}`);
     } catch {
       toast.error("Hiba történt a foglalás során.", { id: toastId });
+    } finally {
+      stopLoading();
     }
   };
 
@@ -99,109 +102,129 @@ export default function BookingForm() {
     <form
       id="booking-form"
       onSubmit={form.handleSubmit(onSubmit)}
-      className="w-full max-w-md"
+      className="w-full max-w-lg"
     >
       {formPage === 0 ? (
         <>
           <p className="mb-6 font-bold text-3xl">Válassz szolgáltatást!</p>
-          <div className="flex flex-col space-y-4">
-            {services
-              .filter((service) => service.type === "top-level")
-              .map((localService) => (
-                <ServiceButton
-                  key={localService.name}
-                  isSelected={localService.name === form.getValues("service")}
-                  service={localService}
-                  onClick={() => {
-                    if (form.getValues("service") !== localService.name) {
-                      console.log("Resetting options");
-                      form.setValue("options", []);
-                    }
-                    form.setValue("service", localService.name);
-                  }}
-                />
-              ))}
+          <div className="flex flex-col">
+            <div className="w-full space-y-2">
+              {services
+                .filter((service) => service.type === "top-level")
+                .map((localService) => (
+                  <ServiceButton
+                    key={localService.name}
+                    isSelected={localService.name === form.getValues("service")}
+                    service={localService}
+                    onClick={() => {
+                      if (form.getValues("service") !== localService.name) {
+                        console.log("Resetting options");
+                        form.setValue("options", []);
+                      }
+                      form.setValue("service", localService.name);
+                    }}
+                  />
+                ))}
+            </div>
             {form.getValues("service") === "Manikűr" ? (
               <>
-                <p className="font-semibold text-2xl">Szolgáltatás Tipusa</p>
-                {services
-                  .filter((service) => service.type === "type")
-                  .map((service) => (
-                    <ServiceButton
-                      key={service.name}
-                      isSelected={options.some(
-                        (s) =>
-                          s.type === service.type && s.name === service.name,
-                      )}
-                      service={service}
-                      onClick={() => selectServiceByCategory(service)}
-                    />
-                  ))}
+                <Separator className="my-6" />
+                <p className="mb-6 font-semibold text-2xl">
+                  Szolgáltatás Tipusa
+                </p>
+                <div className="w-full space-y-2">
+                  {services
+                    .filter((service) => service.type === "type")
+                    .map((service) => (
+                      <ServiceButton
+                        key={service.name}
+                        isSelected={options.some(
+                          (s) =>
+                            s.type === service.type && s.name === service.name,
+                        )}
+                        service={service}
+                        onClick={() => selectServiceByCategory(service)}
+                      />
+                    ))}
+                </div>
               </>
             ) : null}
 
             {form.getValues("service") === "Műkörömépítés" ? (
               <>
-                <p className="font-semibold text-2xl">Válassz Méretet!</p>
-                {services
-                  .filter((service) => service.type === "size")
-                  .map((service) => (
-                    <ServiceButton
-                      key={service.name}
-                      isSelected={options.some(
-                        (s) =>
-                          s.type === service.type && s.name === service.name,
-                      )}
-                      service={service}
-                      onClick={() => {
-                        selectServiceByCategory(service);
-                      }}
-                    />
-                  ))}
+                <Separator className="my-6" />
+
+                <p className="mb-6 font-semibold text-2xl">Válassz Méretet!</p>
+                <div className="w-full space-y-2">
+                  {services
+                    .filter((service) => service.type === "size")
+                    .map((service) => (
+                      <ServiceButton
+                        key={service.name}
+                        isSelected={options.some(
+                          (s) =>
+                            s.type === service.type && s.name === service.name,
+                        )}
+                        service={service}
+                        onClick={() => {
+                          selectServiceByCategory(service);
+                        }}
+                      />
+                    ))}
+                </div>
               </>
             ) : null}
             {form.getValues("service") === "Műkörömépítés" ||
             form.getValues("service") === "Géllakk" ? (
               <>
-                <p className="font-semibold text-2xl">Válassz Diszitést!</p>
-                {services
-                  .filter((service) => service.type === "decoration")
-                  .map((service) => (
-                    <ServiceButton
-                      key={service.name}
-                      isSelected={options.some(
-                        (s) =>
-                          s.type === service.type && s.name === service.name,
-                      )}
-                      service={service}
-                      onClick={() => selectServiceByCategory(service)}
-                    />
-                  ))}
+                <Separator className="my-6" />
+                <p className="mb-6 font-semibold text-2xl">
+                  Válassz Diszitést!
+                </p>
+                <div className="w-full space-y-2">
+                  {services
+                    .filter((service) => service.type === "decoration")
+                    .map((service) => (
+                      <ServiceButton
+                        key={service.name}
+                        isSelected={options.some(
+                          (s) =>
+                            s.type === service.type && s.name === service.name,
+                        )}
+                        service={service}
+                        onClick={() => selectServiceByCategory(service)}
+                      />
+                    ))}
+                </div>
               </>
             ) : null}
             {form.getValues("service") === "Műkörömépítés" ||
             form.getValues("service") === "Géllakk" ? (
               <>
-                <p className="font-semibold text-2xl">
+                <Separator className="my-6" />
+                <p className="mb-6 font-semibold text-2xl">
                   Válassz Extra Szolgáltatást!
                 </p>
-                {services
-                  .filter((service) => service.type === "extra")
-                  .map((service) => (
-                    <ServiceButton
-                      key={service.name}
-                      isSelected={options.some(
-                        (s) =>
-                          s.type === service.type && s.name === service.name,
-                      )}
-                      service={service}
-                      onClick={() => {
-                        selectServiceByCategory(service);
-                      }}
-                    />
-                  ))}
+                <div className="w-full space-y-2">
+                  {services
+                    .filter((service) => service.type === "extra")
+                    .map((service) => (
+                      <ServiceButton
+                        key={service.name}
+                        isSelected={options.some(
+                          (s) =>
+                            s.type === service.type && s.name === service.name,
+                        )}
+                        service={service}
+                        onClick={() => {
+                          selectServiceByCategory(service);
+                        }}
+                      />
+                    ))}
+                </div>
               </>
             ) : null}
+            <Separator className="my-6" />
             <div className="mb-4">
               <BookingDetails
                 formPage={formPage}
@@ -227,7 +250,7 @@ export default function BookingForm() {
               }
               onClick={() => setFormPage((prev) => prev + 1)}
             >
-              Tovább a naptárhoz
+              Tovább az időpont választáshoz
             </Button>
           </div>
         </>
@@ -269,7 +292,8 @@ export default function BookingForm() {
           />
           {timeSlots ? (
             <div className="">
-              <p className="mt-6 mb-2 font-bold text-2xl">Elérhető időpontok</p>
+              <Separator className="my-6" />
+              <p className="mt-4 mb-2 font-bold text-2xl">Elérhető időpontok</p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {timeSlots.map((slot) => (
                   <Button
