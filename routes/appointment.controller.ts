@@ -13,6 +13,17 @@ appointmentController.get("/", async (c) => {
   return c.json(appointments);
 });
 
+appointmentController.get("/:id", async (c) => {
+  const id = c.req.param("id");
+
+  try {
+    const appointment = await AppointmentService.getAppointmentById(id);
+    return c.json(appointment);
+  } catch {
+    return c.json({ error: "Appointment not found" }, 404);
+  }
+});
+
 appointmentController.post(
   "/",
   zValidator("json", createAppointmentSchema),
@@ -71,15 +82,15 @@ appointmentController.post(
 
     const calendarEvent = await calendarResponse.json();
 
-    await AppointmentService.createAppointment({
+    const appointment = await AppointmentService.createAppointment({
       customerId,
       service: body.service,
       startDate: body.startDate,
       endDate: endDate.toISOString(),
-      notes: generateExtendedAppointmentNotes(body.notes, customerId),
+      notes: body.notes,
       eventId: calendarEvent.event.id,
     });
 
-    return c.json({ event: calendarEvent.event, customer });
+    return c.json(appointment);
   },
 );

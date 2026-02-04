@@ -11,6 +11,13 @@ export async function getAppointments(): Promise<
   return response as (Appointment & { customer: Customer })[];
 }
 
+export async function getAppointmentById(
+  id: string,
+): Promise<Appointment & { customer: Customer }> {
+  const response = await AppointmentService.getAppointmentById(id);
+  return response as Appointment & { customer: Customer };
+}
+
 export async function createAppointment(data: CreateAppointment) {
   const response = await fetch(`${process.env.APP_URL}/api/appointments`, {
     method: "POST",
@@ -25,5 +32,5 @@ export async function createAppointment(data: CreateAppointment) {
   }
 
   const appointment = await response.json();
-  return appointment;
+  return appointment as Appointment & { customer: Customer };
 }

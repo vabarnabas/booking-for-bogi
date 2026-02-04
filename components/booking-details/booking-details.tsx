@@ -18,7 +18,7 @@ export default function BookingDetails({
 }) {
   return (
     <div className="space-y-1 rounded-md bg-secondary p-3">
-      <p className="mb-2 font-bold text-xl">Foglalás Adatai</p>
+      <p className="mb-2 font-bold text-xl">Foglalás Részletei</p>
       {service ? (
         <p className="">{`${service} ${options.length ? `(${options.map((service) => service.name).join(", ")})` : ""}`}</p>
       ) : null}

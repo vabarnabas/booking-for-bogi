@@ -3,11 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type z from "zod";
 import { createAppointment } from "@/actions/appointments";
+import useSpinner from "@/hooks/useSpinner";
 import {
   cn,
   formatCurrency,
@@ -156,6 +158,8 @@ const services: Service[] = [
 ];
 
 export default function BookingForm() {
+  const router = useRouter();
+  const { spinnerComponent, startLoading, stopLoading } = useSpinner();
   const form = useForm<z.infer<typeof bookingFormSchema>>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -202,7 +206,7 @@ export default function BookingForm() {
     console.log("Submitting booking form with data:", data);
     const toastId = toast.loading("Foglalás folyamatban...");
     try {
-      await createAppointment({
+      const appointment = await createAppointment({
         name: data.name,
         phoneNumber: data.phoneNumber,
         email: data.email,
@@ -217,6 +221,7 @@ export default function BookingForm() {
         timeFrame: totalTime,
       });
       toast.success("Sikeres foglalás!", { id: toastId });
+      router.push(`/appointments/${appointment.id}`);
     } catch {
       toast.error("Hiba történt a foglalás során.", { id: toastId });
     }
@@ -470,7 +475,7 @@ export default function BookingForm() {
           <p className="mb-4 font-bold text-3xl">Válassz időpontot!</p>
           <Calendar
             onDaySelect={async (date) => {
-              console.log("date", date);
+              startLoading();
               const url = new URL(
                 "/api/calendar/timeslots",
                 window.location.origin,
@@ -491,6 +496,7 @@ export default function BookingForm() {
               const timeSlots = await response.json();
 
               setTimeSlots(timeSlots);
+              stopLoading();
             }}
           />
           {timeSlots ? (
@@ -607,6 +613,7 @@ export default function BookingForm() {
           </Button>
         </div>
       ) : null}
+      {spinnerComponent}
     </form>
   );
 }

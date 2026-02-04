@@ -11,6 +11,17 @@ async function getAppointments() {
   return appointments;
 }
 
+async function getAppointmentById(id: string) {
+  const appointment = await db.query.appointments.findFirst({
+    where: (appointments, { eq }) => eq(appointments.id, id),
+    with: {
+      customer: true,
+    },
+  });
+
+  return appointment;
+}
+
 async function createAppointment({
   service,
   startDate,
@@ -26,17 +37,23 @@ async function createAppointment({
   eventId: string;
   customerId: string;
 }) {
-  return await db.insert(appointments).values({
-    name: service,
-    startDate: new Date(startDate),
-    endDate: new Date(endDate),
-    notes: notes,
-    eventId: eventId,
-    customerId: customerId,
-  });
+  const createdAppointments = await db
+    .insert(appointments)
+    .values({
+      name: service,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      notes: notes,
+      eventId: eventId,
+      customerId: customerId,
+    })
+    .returning();
+
+  return createdAppointments[0];
 }
 
 export const AppointmentService = {
   getAppointments,
+  getAppointmentById,
   createAppointment,
 };
