@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -11,152 +10,16 @@ import type z from "zod";
 import { createAppointment } from "@/actions/appointments";
 import { getTimeSlots } from "@/actions/calendar";
 import useSpinner from "@/hooks/useSpinner";
-import {
-  cn,
-  formatCurrency,
-  generateBaseAppointmentNotes,
-  getTimeFromDate,
-} from "@/lib/utils";
+import { services } from "@/lib/services";
+import { generateBaseAppointmentNotes, getTimeFromDate } from "@/lib/utils";
 import { bookingFormSchema } from "@/types/form.types";
 import type { Service } from "@/types/service.types";
 import BookingDetails from "../booking-details/booking-details";
 import Calendar from "../calendar/calendar";
+import ServiceButton from "../service-button/service-button";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
-
-const services: Service[] = [
-  {
-    name: "Manikűr",
-    type: "top-level",
-    price: null,
-    duration: null,
-    image: "/photos/manicure.jpg",
-    optionCount: 1,
-  },
-  {
-    name: "Műkörömépítés",
-    type: "top-level",
-    price: null,
-    duration: null,
-    optionCount: 3,
-  },
-  {
-    name: "Férfi Manikűr",
-    type: "type",
-    price: 4000,
-    duration: 30,
-  },
-  {
-    name: "Géllakk",
-    type: "top-level",
-    price: 7000,
-    duration: 60,
-    optionCount: 2,
-  },
-  {
-    name: "Női Manikűr",
-    type: "type",
-    price: 4000,
-    duration: 30,
-  },
-  {
-    name: "Japán Manikűr",
-    type: "type",
-    price: 5500,
-    duration: 45,
-  },
-  {
-    name: "S Méret",
-    type: "size",
-    price: 8000,
-    duration: 90,
-  },
-  {
-    name: "S/M Méret",
-    type: "size",
-    price: 8500,
-    duration: 90,
-  },
-  {
-    name: "M Méret",
-    type: "size",
-    price: 9000,
-    duration: 90,
-  },
-  {
-    name: "M/L Méret",
-    type: "size",
-    price: 9500,
-    duration: 120,
-  },
-  {
-    name: "L Méret",
-    type: "size",
-    price: 10000,
-    duration: 120,
-  },
-  {
-    name: "XL Méret",
-    type: "size",
-    price: 11000,
-    duration: 150,
-  },
-  {
-    name: "Beépített Francia",
-    type: "decoration",
-    price: 2500,
-    duration: 40,
-  },
-  {
-    name: "Francia Festés",
-    type: "decoration",
-    price: 1000,
-    duration: 20,
-  },
-  {
-    name: "Babyboomer",
-    type: "decoration",
-    price: 1000,
-    duration: 10,
-  },
-  {
-    name: "Kis Díszítés",
-    type: "decoration",
-    price: 1000,
-    duration: 15,
-  },
-  {
-    name: "Közepes Díszítés",
-    type: "decoration",
-    price: 1500,
-    duration: 25,
-  },
-  {
-    name: "Nagy Díszítés",
-    type: "decoration",
-    price: 2500,
-    duration: 35,
-  },
-  {
-    name: "Nem kérek extra díszítést",
-    type: "decoration",
-    price: 0,
-    duration: 0,
-  },
-  {
-    name: "Van Más Munkája a Körmömön",
-    type: "extra",
-    price: 3000,
-    duration: 30,
-  },
-  {
-    name: "Nincs Más Munkája a Körmömön",
-    type: "extra",
-    price: 0,
-    duration: 0,
-  },
-];
 
 export default function BookingForm() {
   const router = useRouter();
@@ -230,6 +93,8 @@ export default function BookingForm() {
 
   form.watch();
 
+  console.log(options);
+
   return (
     <form
       id="booking-form"
@@ -242,47 +107,19 @@ export default function BookingForm() {
           <div className="flex flex-col space-y-4">
             {services
               .filter((service) => service.type === "top-level")
-              .map((service) => (
-                <button
-                  key={service.name}
-                  type="button"
+              .map((localService) => (
+                <ServiceButton
+                  key={localService.name}
+                  isSelected={localService.name === form.getValues("service")}
+                  service={localService}
                   onClick={() => {
-                    if (service.name !== form.getValues("service")) {
+                    if (form.getValues("service") !== localService.name) {
+                      console.log("Resetting options");
                       form.setValue("options", []);
                     }
-                    form.setValue("service", service.name);
+                    form.setValue("service", localService.name);
                   }}
-                  className={cn(
-                    "flex items-center gap-x-4 rounded-md border p-3",
-                    form.getValues("service") === service.name
-                      ? "border-primary bg-primary/10"
-                      : "bg-secondary/30",
-                  )}
-                >
-                  {service.image ? (
-                    <div className="relative aspect-scare size-16 shrink-0 overflow-clip rounded">
-                      <Image
-                        src={service.image}
-                        alt={service.name}
-                        objectFit="cover"
-                        fill
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-square size-16 rounded bg-primary"></div>
-                  )}
-                  <div className="flex w-full flex-col items-start">
-                    <p className="font-semibold text-xl">{service.name}</p>
-                    {service.price ? (
-                      <p className="text-lg text-muted-foreground">
-                        {formatCurrency(service.price as number)}
-                        {service.duration ? ` - ${service.duration} perc` : ""}
-                      </p>
-                    ) : (
-                      <p className=""></p>
-                    )}
-                  </div>
-                </button>
+                />
               ))}
             {form.getValues("service") === "Manikűr" ? (
               <>
@@ -290,30 +127,15 @@ export default function BookingForm() {
                 {services
                   .filter((service) => service.type === "type")
                   .map((service) => (
-                    <button
+                    <ServiceButton
                       key={service.name}
-                      type="button"
-                      onClick={() => selectServiceByCategory(service)}
-                      className={cn(
-                        "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
-                        options.find(
-                          (s) => s.type === "type" && s.name === service.name,
-                        )
-                          ? "border-primary bg-primary/10"
-                          : "",
+                      isSelected={options.some(
+                        (s) =>
+                          s.type === service.type && s.name === service.name,
                       )}
-                    >
-                      <div className="aspect-square size-16 rounded bg-primary"></div>
-                      <div className="flex w-full flex-col items-start">
-                        <p className="font-semibold text-xl">{service.name}</p>
-                        <p className="text-lg text-muted-foreground">
-                          {formatCurrency(service.price as number)}
-                          {service.duration
-                            ? ` - ${service.duration} perc`
-                            : ""}
-                        </p>
-                      </div>
-                    </button>
+                      service={service}
+                      onClick={() => selectServiceByCategory(service)}
+                    />
                   ))}
               </>
             ) : null}
@@ -324,30 +146,17 @@ export default function BookingForm() {
                 {services
                   .filter((service) => service.type === "size")
                   .map((service) => (
-                    <button
+                    <ServiceButton
                       key={service.name}
-                      type="button"
-                      onClick={() => selectServiceByCategory(service)}
-                      className={cn(
-                        "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
-                        options.find(
-                          (s) => s.type === "size" && s.name === service.name,
-                        )
-                          ? "border-primary bg-primary/10"
-                          : "",
+                      isSelected={options.some(
+                        (s) =>
+                          s.type === service.type && s.name === service.name,
                       )}
-                    >
-                      <div className="aspect-square size-16 rounded bg-primary"></div>
-                      <div className="flex w-full flex-col items-start">
-                        <p className="font-semibold text-xl">{service.name}</p>
-                        <p className="text-lg text-muted-foreground">
-                          {formatCurrency(service.price as number)}
-                          {service.duration
-                            ? ` - ${service.duration} perc`
-                            : ""}
-                        </p>
-                      </div>
-                    </button>
+                      service={service}
+                      onClick={() => {
+                        selectServiceByCategory(service);
+                      }}
+                    />
                   ))}
               </>
             ) : null}
@@ -358,31 +167,15 @@ export default function BookingForm() {
                 {services
                   .filter((service) => service.type === "decoration")
                   .map((service) => (
-                    <button
+                    <ServiceButton
                       key={service.name}
-                      type="button"
-                      onClick={() => selectServiceByCategory(service)}
-                      className={cn(
-                        "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
-                        options.find(
-                          (s) =>
-                            s.type === "decoration" && s.name === service.name,
-                        )
-                          ? "border-primary bg-primary/10"
-                          : "",
+                      isSelected={options.some(
+                        (s) =>
+                          s.type === service.type && s.name === service.name,
                       )}
-                    >
-                      <div className="aspect-square size-16 rounded bg-primary"></div>
-                      <div className="flex w-full flex-col items-start">
-                        <p className="font-semibold text-xl">{service.name}</p>
-                        <p className="text-lg text-muted-foreground">
-                          {formatCurrency(service.price as number)}
-                          {service.duration
-                            ? ` - ${service.duration} perc`
-                            : ""}
-                        </p>
-                      </div>
-                    </button>
+                      service={service}
+                      onClick={() => selectServiceByCategory(service)}
+                    />
                   ))}
               </>
             ) : null}
@@ -395,30 +188,17 @@ export default function BookingForm() {
                 {services
                   .filter((service) => service.type === "extra")
                   .map((service) => (
-                    <button
+                    <ServiceButton
                       key={service.name}
-                      type="button"
-                      onClick={() => selectServiceByCategory(service)}
-                      className={cn(
-                        "flex items-center gap-x-4 rounded-md border bg-secondary/30 p-3",
-                        options.find(
-                          (s) => s.type === "extra" && s.name === service.name,
-                        )
-                          ? "border-primary bg-primary/10"
-                          : "",
+                      isSelected={options.some(
+                        (s) =>
+                          s.type === service.type && s.name === service.name,
                       )}
-                    >
-                      <div className="aspect-square size-16 rounded bg-primary"></div>
-                      <div className="flex w-full flex-col items-start">
-                        <p className="font-semibold text-xl">{service.name}</p>
-                        <p className="text-lg text-muted-foreground">
-                          {formatCurrency(service.price as number)}
-                          {service.duration
-                            ? ` - ${service.duration} perc`
-                            : ""}
-                        </p>
-                      </div>
-                    </button>
+                      service={service}
+                      onClick={() => {
+                        selectServiceByCategory(service);
+                      }}
+                    />
                   ))}
               </>
             ) : null}
