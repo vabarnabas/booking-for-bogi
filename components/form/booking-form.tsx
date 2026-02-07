@@ -67,7 +67,7 @@ export default function BookingForm() {
     );
   }, [options, service]);
 
-  const onSubmit = async (data: z.infer<typeof bookingFormSchema>) => {
+  const onSubmit = form.handleSubmit(async (data) => {
     startLoading();
     const toastId = toast.loading("Foglalás folyamatban...");
     try {
@@ -92,18 +92,14 @@ export default function BookingForm() {
     } finally {
       stopLoading();
     }
-  };
+  });
 
   form.watch();
 
   console.log(options);
 
   return (
-    <form
-      id="booking-form"
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="w-full max-w-lg"
-    >
+    <form id="booking-form" onSubmit={onSubmit} className="w-full max-w-lg">
       {formPage === 0 ? (
         <>
           <p className="mb-6 font-bold text-3xl">Válassz szolgáltatást!</p>
