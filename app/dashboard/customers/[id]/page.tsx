@@ -1,5 +1,7 @@
 import { getCustomerById } from "@/actions/customers";
 
+export const dynamic = "force-dynamic";
+
 export default async function CustomerById({
   params,
 }: {

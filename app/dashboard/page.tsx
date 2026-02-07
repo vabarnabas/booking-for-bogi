@@ -6,6 +6,8 @@ import { getAppointments } from "@/actions/appointments";
 import { Separator } from "@/components/ui/separator";
 import { formatDateTime } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function Dashboard() {
   const appointments = await getAppointments();
 

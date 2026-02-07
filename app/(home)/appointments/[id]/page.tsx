@@ -1,6 +1,8 @@
 import { getAppointmentById } from "@/actions/appointments";
 import { formatDateTime, getTimeFromDate } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppointmentResult({
   params,
 }: {
