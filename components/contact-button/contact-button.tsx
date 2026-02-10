@@ -10,7 +10,7 @@ export default function ContactButton() {
           <Link
             href="https://www.facebook.com/profile.php?id=61570092973159"
             target="_blank"
-            className="relative flex size-12 items-center justify-center overflow-clip rounded-full border-primary bg-background object-contain shadow-sm ring-3 ring-primary md:size-14"
+            className="relative flex size-12 items-center justify-center overflow-clip rounded-full border-primary bg-background object-contain shadow-sm ring-3 ring-primary hover:opacity-80 md:size-14"
           >
             <Image
               src="/logo.png"

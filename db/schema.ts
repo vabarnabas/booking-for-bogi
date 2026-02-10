@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const customers = pgTable("customers", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -23,6 +23,7 @@ export const appointments = pgTable("appointments", {
   eventId: text("event_id").notNull(),
 
   status: text("status").notNull().default("scheduled"),
+  details: jsonb("details").notNull().default({}),
 
   customerId: uuid("customer_id").notNull(),
 });

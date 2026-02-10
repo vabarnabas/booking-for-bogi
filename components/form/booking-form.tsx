@@ -18,6 +18,7 @@ import BookingDetails from "../booking-details/booking-details";
 import Calendar from "../calendar/calendar";
 import ServiceButton from "../service-button/service-button";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
@@ -383,6 +384,24 @@ export default function BookingForm() {
                     {...field}
                     aria-invalid={fieldState.invalid}
                   />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              control={form.control}
+              name="privacyPolicy"
+              render={({ field, fieldState }) => (
+                <Field aria-invalid={fieldState.invalid}>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                  <FieldLabel htmlFor="booking-form-privacy-policy">
+                    Adatvédelmi szabályzat elfogadása (kötelező)
+                  </FieldLabel>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}

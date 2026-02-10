@@ -54,13 +54,15 @@ async function getAllTimeSlots(date: string, timeFrame: number) {
     const slotEnd = new Date(slotStart.getTime() + timeFrame * 60000);
 
     // Check if the entire timeFrame duration is free
-    const hasConflict = events.some((event: any) => {
-      const eventStart = new Date(event.start_dt);
-      const eventEnd = new Date(event.end_dt);
+    const hasConflict = events.some(
+      (event: { start_dt: string; end_dt: string }) => {
+        const eventStart = new Date(event.start_dt);
+        const eventEnd = new Date(event.end_dt);
 
-      // Check if any part of the proposed appointment overlaps with this event
-      return slotStart < eventEnd && slotEnd > eventStart;
-    });
+        // Check if any part of the proposed appointment overlaps with this event
+        return slotStart < eventEnd && slotEnd > eventStart;
+      },
+    );
 
     if (!hasConflict && slotEnd <= workDayEnd) {
       timeSlots.push({ start: new Date(slotStart), end: slotEnd });
