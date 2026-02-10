@@ -95,8 +95,8 @@ export default function Calendar({
               type="button"
               disabled={
                 new Date(currentYear, currentMonth, day) <= new Date() ||
-                day % 7 === 1 ||
-                day % 7 === 0
+                (day + firstDayOfMonth + 1) % 7 === 1 ||
+                (day + firstDayOfMonth + 1) % 7 === 0
               }
               className={cn(
                 "flex aspect-square size-9 content-center items-center justify-center rounded-full hover:bg-primary/30 disabled:cursor-not-allowed disabled:text-muted-foreground/30 disabled:hover:bg-muted",
