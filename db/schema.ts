@@ -7,6 +7,8 @@ export const customers = pgTable("customers", {
   email: text("email"),
   phoneNumber: text("phone_number").notNull(),
 
+  status: text("status").notNull().default("active"),
+
   notes: text("notes"),
 });
 
@@ -19,6 +21,8 @@ export const appointments = pgTable("appointments", {
 
   notes: text("notes"),
   eventId: text("event_id").notNull(),
+
+  status: text("status").notNull().default("scheduled"),
 
   customerId: uuid("customer_id").notNull(),
 });
