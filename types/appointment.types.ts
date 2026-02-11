@@ -1,4 +1,5 @@
 import z from "zod";
+import { paymentDetailsSchema } from "./form.types";
 
 export const appointmentSchema = z.object({
   id: z.uuid(),
@@ -9,6 +10,8 @@ export const appointmentSchema = z.object({
 
   notes: z.string().optional(),
   eventId: z.string(),
+
+  status: z.string(),
 
   customerId: z.string(),
 });
@@ -25,7 +28,15 @@ export const createAppointmentSchema = z.object({
 
   startDate: z.string(),
 
-  notes: z.string(),
+  details: z
+    .object({
+      serviceOptions: z.array(z.string()),
+      totalCost: z.number(),
+      bookingName: z.string(),
+      bookingPhoneNumber: z.string(),
+      bookingEmail: z.string().optional(),
+    })
+    .and(paymentDetailsSchema),
 });
 
 export type CreateAppointment = z.infer<typeof createAppointmentSchema>;

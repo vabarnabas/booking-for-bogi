@@ -18,12 +18,33 @@ export function formatDateTime(date: Date): string {
   return `${year}.${month}.${day} ${getTimeFromDate(date)}`;
 }
 
-export function generateBaseAppointmentNotes(
-  service: string,
-  selectedServiceNames: string[],
-  totalCost: number,
-  totalTime: number,
-): string {
+export function generateBaseAppointmentNotes({
+  service,
+  selectedServiceNames,
+  totalCost,
+  totalTime,
+  bookingName,
+  bookingPhoneNumber,
+  bookingEmail,
+  paymentMethod,
+  postCode,
+  city,
+  street,
+  houseNumber,
+}: {
+  service: string;
+  selectedServiceNames: string[];
+  totalCost: number;
+  totalTime: number;
+  bookingName: string;
+  bookingPhoneNumber: string;
+  bookingEmail?: string;
+  paymentMethod: "cash" | "transfer";
+  postCode?: string;
+  city?: string;
+  street?: string;
+  houseNumber?: string;
+}): string {
   return `
 **Kiválasztott szolgáltatás:** ${service}
 
@@ -38,7 +59,27 @@ ${selectedServiceNames.map((s) => `- ${s}`).join("\n")}
   }).format(totalCost)}
                 
                 
-**Teljes idő:** ${totalTime} perc`;
+**Teljes idő:** ${totalTime} perc
+
+---
+
+**Foglaló neve:** ${bookingName}
+
+**Foglaló telefonszáma:** ${bookingPhoneNumber}
+
+**Foglaló email címe:** ${bookingEmail || "Nincs megadva"}
+
+---
+
+**Fizetési mód:** ${paymentMethod === "cash" ? "Készpénz" : "Átutalás (helyszínen)"}
+
+${
+  paymentMethod === "transfer"
+    ? `
+**Számlázási cím:** ${postCode}, ${city}, ${street} ${houseNumber}`
+    : ""
+}
+`;
 }
 
 export function generateExtendedAppointmentNotes(
@@ -46,7 +87,9 @@ export function generateExtendedAppointmentNotes(
   customerId: string,
 ) {
   return `${baseNote}
-  
+
+---
+
 **Ügyfél:** [Link](${process.env.APP_URL}/dashboard/customers/${customerId})`;
 }
 

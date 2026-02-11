@@ -95,6 +95,9 @@ export default function Calendar({
               type="button"
               disabled={
                 new Date(currentYear, currentMonth, day) <= new Date() ||
+                (new Date().getHours() >= 20 &&
+                  new Date(currentYear, currentMonth, day).toDateString() ===
+                    new Date().toDateString()) ||
                 (day + firstDayOfMonth + 1) % 7 === 1 ||
                 (day + firstDayOfMonth + 1) % 7 === 0
               }

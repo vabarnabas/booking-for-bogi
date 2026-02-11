@@ -11,7 +11,7 @@ import { createAppointment } from "@/actions/appointments";
 import { getTimeSlots } from "@/actions/calendar";
 import useSpinner from "@/hooks/useSpinner";
 import { services } from "@/lib/services";
-import { generateBaseAppointmentNotes, getTimeFromDate } from "@/lib/utils";
+import { getTimeFromDate } from "@/lib/utils";
 import { bookingFormSchema } from "@/types/form.types";
 import type { Service } from "@/types/service.types";
 import BookingDetails from "../booking-details/booking-details";
@@ -93,14 +93,24 @@ export default function BookingForm() {
         phoneNumber: `+36${data.phoneNumber}`,
         email: data.email,
         service: data.service,
-        notes: generateBaseAppointmentNotes(
-          data.service,
-          data.options.map((s) => s.name),
-          totalCost,
-          totalTime,
-        ),
         startDate: data.timeSlot.start,
         timeFrame: totalTime,
+        details: {
+          serviceOptions: data.options.map((option) => option.name),
+          totalCost,
+          bookingName: data.name,
+          bookingPhoneNumber: `+36${data.phoneNumber}`,
+          bookingEmail: data.email,
+          ...(data.paymentMethod === "cash"
+            ? { paymentMethod: "cash" }
+            : {
+                paymentMethod: "transfer",
+                postCode: data.postCode,
+                city: data.city,
+                street: data.street,
+                houseNumber: data.houseNumber,
+              }),
+        },
       });
       toast.success("Sikeres foglalás!", { id: toastId });
       router.push(`/appointments/${appointment.id}`);
@@ -422,7 +432,7 @@ export default function BookingForm() {
                     id="booking-form-payment-method"
                     items={[
                       { label: "Készpénz", value: "cash" },
-                      { label: "Átutalás", value: "transfer" },
+                      { label: "Átutalás (helyszínen)", value: "transfer" },
                     ]}
                     {...field}
                     value={field.value}
@@ -438,7 +448,9 @@ export default function BookingForm() {
                     <SelectContent>
                       <SelectGroup>
                         <SelectItem value="cash">Készpénz</SelectItem>
-                        <SelectItem value="transfer">Átutalás</SelectItem>
+                        <SelectItem value="transfer">
+                          Átutalás (helyszínen)
+                        </SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>

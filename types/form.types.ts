@@ -7,7 +7,6 @@ export const paymentDetailsSchema = z.discriminatedUnion("paymentMethod", [
   }),
   z.object({
     paymentMethod: z.literal("transfer"),
-    name: z.string().min(2, { message: "A név túl rövid." }),
     postCode: z.string().min(4, { message: "Az irányítószám túl rövid." }),
     city: z.string().min(2, { message: "A város neve túl rövid." }),
     street: z.string().min(2, { message: "Az utca neve túl rövid." }),

@@ -1,7 +1,11 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { generateExtendedAppointmentNotes } from "@/lib/utils";
+import {
+  generateBaseAppointmentNotes,
+  generateExtendedAppointmentNotes,
+} from "@/lib/utils";
 import { AppointmentService } from "@/services/appointment.service";
+import { CalendarService } from "@/services/calendar.service";
 import { CustomerService } from "@/services/customer.service";
 import { createAppointmentSchema } from "@/types/appointment.types";
 
@@ -55,40 +59,40 @@ appointmentController.post(
       customerId = newCustomer.id;
     } else customerId = customer.id;
 
-    const calendarResponse = await fetch(url, {
-      method: "POST",
-      body: JSON.stringify({
-        subcalendar_ids: ["15143779"],
-        start_dt: new Date(body.startDate)
-          .toISOString()
-          .replace(/\.\d{3}Z$/, "Z"),
-        end_dt: endDate.toISOString().replace(/\.\d{3}Z$/, "Z"),
-        signup_enabled: false,
-        comments_enabled: true,
-        attachemnts: [],
-        title: body.service,
-        notes: generateExtendedAppointmentNotes(body.notes, customerId),
-        who: body.name,
-      }),
-      headers: {
-        "Teamup-Token": `${process.env.CALENDAR_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+    const notes = generateBaseAppointmentNotes({
+      service: body.service,
+      bookingName: body.name,
+      bookingPhoneNumber: body.phoneNumber,
+      totalTime: body.timeFrame,
+      totalCost: body.details.totalCost,
+      selectedServiceNames: body.details.serviceOptions,
+      bookingEmail: body.email,
+      ...(body.details.paymentMethod === "transfer"
+        ? {
+            paymentMethod: "transfer",
+            city: body.details.city,
+            postCode: body.details.postCode,
+            street: body.details.street,
+            houseNumber: body.details.houseNumber,
+          }
+        : { paymentMethod: "cash" }),
     });
 
-    if (!calendarResponse.ok) {
-      throw new Error(`Error creating event: ${calendarResponse.statusText}`);
-    }
-
-    const calendarEvent = await calendarResponse.json();
+    const event = await CalendarService.createEvent({
+      title: body.service,
+      start_dt: body.startDate,
+      timeFrame: body.timeFrame,
+      notes: generateExtendedAppointmentNotes(notes, customerId),
+      who: body.name,
+    });
 
     const appointment = await AppointmentService.createAppointment({
       customerId,
       service: body.service,
       startDate: body.startDate,
       endDate: endDate.toISOString(),
-      notes: body.notes,
-      eventId: calendarEvent.event.id,
+      notes: notes,
+      eventId: event.id,
     });
 
     return c.json(appointment);

@@ -7,7 +7,7 @@ export default function DashboardLayout({
 }>) {
   return (
     <>
-      <div className="flex grow px-6 pt-18">{children}</div>
+      <div className="flex grow px-6 pt-20 pb-6">{children}</div>
       <Navbar />
     </>
   );

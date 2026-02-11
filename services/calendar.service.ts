@@ -1,5 +1,4 @@
-import { db } from "@/db";
-import { appointments, customers } from "@/db/schema";
+import type { CreateEvent, Event } from "@/types/event.types";
 
 async function getEvents(params?: {
   startDate?: string;
@@ -75,15 +74,7 @@ async function getAllTimeSlots(date: string, timeFrame: number) {
   return timeSlots;
 }
 
-async function createEvent(
-  startDate: string,
-  service: string,
-  name: string,
-  options?: {
-    description?: string;
-    timeFrame?: number;
-  },
-) {
+async function createEvent(options: CreateEvent) {
   const url = new URL(
     `${process.env.CALENDAR_API_URL}/${process.env.CALENDAR_KEY}/events`,
   );
@@ -91,21 +82,23 @@ async function createEvent(
   url.searchParams.append("inputFormat", "markdown");
 
   const endDate = new Date(
-    new Date(startDate).getTime() + (options?.timeFrame || 30) * 60000,
+    new Date(options.start_dt).getTime() + (options?.timeFrame || 30) * 60000,
   );
 
   const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify({
       subcalendar_ids: ["15143779"],
-      start_dt: new Date(startDate).toISOString().replace(/\.\d{3}Z$/, "Z"),
+      start_dt: new Date(options.start_dt)
+        .toISOString()
+        .replace(/\.\d{3}Z$/, "Z"),
       end_dt: endDate.toISOString().replace(/\.\d{3}Z$/, "Z"),
       signup_enabled: false,
       comments_enabled: true,
       attachments: [],
-      title: `${service}`,
-      notes: options?.description || "Test event created via API",
-      who: name,
+      title: `${options.title}`,
+      notes: options?.notes || "Test event created via API",
+      who: options.who,
     }),
     headers: {
       "Teamup-Token": `${process.env.CALENDAR_API_KEY}`,
@@ -118,36 +111,7 @@ async function createEvent(
   }
 
   const event = await response.json();
-
-  let userId: string;
-
-  const user = await db.query.customers.findFirst({
-    where: (customers, { eq }) => eq(customers.name, name),
-  });
-
-  if (!user) {
-    const insertedUser = await db
-      .insert(customers)
-      .values({
-        name: name,
-        phoneNumber: "N/A",
-      })
-      .returning();
-    userId = insertedUser[0].id;
-  } else {
-    userId = user.id;
-  }
-
-  await db.insert(appointments).values({
-    name: service,
-    startDate: new Date(startDate),
-    endDate: endDate,
-    notes: options?.description || "",
-    eventId: event.event.id,
-    customerId: userId,
-  });
-
-  return { event, user };
+  return event.event as Event;
 }
 
 async function checkAccess() {
