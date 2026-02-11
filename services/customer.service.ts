@@ -27,6 +27,9 @@ async function getCustomerById(id: string) {
   try {
     const customer = await db.query.customers.findFirst({
       where: (customers, { eq }) => eq(customers.id, id),
+      with: {
+        appointments: true,
+      },
     });
     return customer;
   } catch (error) {

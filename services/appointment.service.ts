@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { appointments } from "@/db/schema";
 
@@ -52,8 +53,19 @@ async function createAppointment({
   return createdAppointments[0];
 }
 
+async function updateAppointmentStatus(id: string, status: string) {
+  const [updatedAppointment] = await db
+    .update(appointments)
+    .set({ status })
+    .where(eq(appointments.id, id))
+    .returning();
+
+  return updatedAppointment;
+}
+
 export const AppointmentService = {
   getAppointments,
   getAppointmentById,
   createAppointment,
+  updateAppointmentStatus,
 };

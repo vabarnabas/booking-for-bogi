@@ -3,10 +3,9 @@ import Link from "next/link";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getAppointments } from "@/actions/appointments";
+import AppointmentStatusSelector from "@/components/appointment-status-selector/appointment-status-selector";
 import { Separator } from "@/components/ui/separator";
-import { formatDateTime } from "@/lib/utils";
-
-export const dynamic = "force-dynamic";
+import { cn, formatDateTime } from "@/lib/utils";
 
 export default async function Dashboard() {
   const appointments = await getAppointments();
@@ -21,23 +20,26 @@ export default async function Dashboard() {
               new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
           )
           .map((appointment) => (
-            <div key={appointment.id} className="w-full rounded-md border">
+            <div
+              key={appointment.id}
+              className="w-full overflow-clip rounded-md border"
+            >
               <div className="border-b bg-secondary p-4">
-                <div className="flex w-full items-center justify-between">
-                  <div className="">
+                <div className="flex w-full flex-wrap items-center justify-between gap-4">
+                  <div
+                    className={cn(
+                      appointment.status === "canceled" &&
+                        "text-muted-foreground",
+                    )}
+                  >
                     <p className="font-bold text-2xl">{appointment.name}</p>
                     <p className="">{formatDateTime(appointment.startDate)}</p>
                   </div>
-                  <p className="font-semibold">
-                    {(() => {
-                      switch (appointment.status) {
-                        case "scheduled":
-                          return "Lefoglalva";
-                        default:
-                          return "Ismeretlen";
-                      }
-                    })()}
-                  </p>
+
+                  <AppointmentStatusSelector
+                    defaultValue={appointment.status}
+                    appointmentId={appointment.id}
+                  />
                 </div>
               </div>
               <div className="p-4">
@@ -83,7 +85,7 @@ export default async function Dashboard() {
                 <div className="flex w-full flex-wrap items-center justify-between gap-4">
                   <Link
                     href={`/dashboard/customers/${appointment.customer.id}`}
-                    className="flex items-center gap-x-1.5"
+                    className="flex items-center gap-x-1.5 underline hover:text-primary"
                   >
                     <UserIcon className="size-5" />
                     {appointment.customer.name}
@@ -91,9 +93,9 @@ export default async function Dashboard() {
                   <Link
                     href={`${process.env.CALENDAR_URL}/${appointment.eventId}`}
                     target="_blank"
-                    className="rounded-md bg-primary px-3 py-1.5 hover:bg-primary/80"
+                    className="rounded-md bg-primary px-3 py-1 hover:bg-primary/80"
                   >
-                    View Event in Calendar
+                    Esemény Megtekintése
                   </Link>
                 </div>
               </div>

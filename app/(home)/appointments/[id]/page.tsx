@@ -4,8 +4,6 @@ import CustomMap from "@/components/map/map";
 import { Separator } from "@/components/ui/separator";
 import { formatDateTime, getTimeFromDate } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
-
 export default async function AppointmentResult({
   params,
 }: {
@@ -17,7 +15,7 @@ export default async function AppointmentResult({
 
   return (
     <div className="flex w-full grow justify-center">
-      <div className="w-full max-w-md space-y-2">
+      <div className="w-full max-w-lg space-y-2">
         <p className="mb-6 font-bold text-3xl">Sikeres Foglalás!</p>
         <div className="overflow-clip rounded-md border">
           <div className="border-b bg-secondary p-4">
@@ -52,6 +50,26 @@ export default async function AppointmentResult({
                 9064 Vámosszabadi Dália utca 2.
               </Link>
             </div>
+          </div>
+        </div>
+        <div className="overflow-clip rounded-md border">
+          <div className="border-b bg-secondary p-4">
+            <p className="font-semibold text-xl">Elérhetőségek</p>
+          </div>
+          <div className="space-y-2 p-4">
+            <p className="font-semibold">
+              Telefonszám: <span className="font-normal">+36703133819</span>
+            </p>
+            <p className="font-semibold">
+              Facebook Oldal:{" "}
+              <Link
+                href="https://www.facebook.com/profile.php?id=61570092973159"
+                target="_blank"
+                className="font-normal underline hover:text-primary"
+              >
+                Link
+              </Link>
+            </p>
           </div>
         </div>
       </div>
