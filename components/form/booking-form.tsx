@@ -21,6 +21,20 @@ import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "../ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Separator } from "../ui/separator";
 
 export default function BookingForm() {
@@ -32,6 +46,8 @@ export default function BookingForm() {
       name: "",
       phoneNumber: "",
       email: "",
+      privacyPolicy: false,
+      paymentMethod: "cash",
       options: [],
     },
   });
@@ -74,7 +90,7 @@ export default function BookingForm() {
     try {
       const appointment = await createAppointment({
         name: data.name,
-        phoneNumber: data.phoneNumber,
+        phoneNumber: `+36${data.phoneNumber}`,
         email: data.email,
         service: data.service,
         notes: generateBaseAppointmentNotes(
@@ -96,8 +112,6 @@ export default function BookingForm() {
   });
 
   form.watch();
-
-  console.log(options);
 
   return (
     <form id="booking-form" onSubmit={onSubmit} className="w-full max-w-lg">
@@ -341,7 +355,7 @@ export default function BookingForm() {
               render={({ field, fieldState }) => (
                 <Field aria-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="booking-form-name">
-                    Név (kötelező)
+                    Név<span className="text-red-500">*</span>
                   </FieldLabel>
                   <Input
                     id="booking-form-name"
@@ -360,13 +374,19 @@ export default function BookingForm() {
               render={({ field, fieldState }) => (
                 <Field aria-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="booking-form-phone-number">
-                    Telefonszám (kötelező)
+                    Telefonszám<span className="text-red-500">*</span>
                   </FieldLabel>
-                  <Input
-                    id="booking-form-phone-number"
-                    {...field}
-                    aria-invalid={fieldState.invalid}
-                  />
+
+                  <InputGroup>
+                    <InputGroupAddon>
+                      <InputGroupText>+36</InputGroupText>
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      id="booking-form-phone-number"
+                      {...field}
+                      aria-invalid={fieldState.invalid}
+                    />
+                  </InputGroup>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
@@ -392,16 +412,147 @@ export default function BookingForm() {
             />
             <Controller
               control={form.control}
+              name="paymentMethod"
+              render={({ field, fieldState }) => (
+                <Field aria-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="booking-form-payment-method">
+                    Fizetési mód
+                  </FieldLabel>
+                  <Select
+                    id="booking-form-payment-method"
+                    items={[
+                      { label: "Készpénz", value: "cash" },
+                      { label: "Átutalás", value: "transfer" },
+                    ]}
+                    {...field}
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                    }}
+                    defaultValue="cash"
+                    aria-invalid={fieldState.invalid}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="cash">Készpénz</SelectItem>
+                        <SelectItem value="transfer">Átutalás</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+            {form.getValues("paymentMethod") === "transfer" ? (
+              <>
+                <Separator className="my-6" />
+                <div className="space-y-4">
+                  <p className="mb-4 font-semibold text-xl">
+                    Számlázási Adatok
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Controller
+                      control={form.control}
+                      name="postCode"
+                      render={({ field, fieldState }) => (
+                        <Field aria-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor="booking-form-postal-code">
+                            Irányítószám<span className="text-red-500">*</span>
+                          </FieldLabel>
+                          <Input
+                            id="booking-form-postal-code"
+                            {...field}
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      control={form.control}
+                      name="city"
+                      render={({ field, fieldState }) => (
+                        <Field aria-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor="booking-form-city">
+                            Város<span className="text-red-500">*</span>
+                          </FieldLabel>
+                          <Input
+                            id="booking-form-city"
+                            {...field}
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      control={form.control}
+                      name="street"
+                      render={({ field, fieldState }) => (
+                        <Field aria-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor="booking-form-street">
+                            Utca<span className="text-red-500">*</span>
+                          </FieldLabel>
+                          <Input
+                            id="booking-form-street"
+                            {...field}
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      control={form.control}
+                      name="houseNumber"
+                      render={({ field, fieldState }) => (
+                        <Field aria-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor="booking-form-house-number">
+                            Házszám<span className="text-red-500">*</span>
+                          </FieldLabel>
+                          <Input
+                            id="booking-form-house-number"
+                            {...field}
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                  </div>
+                </div>
+                <Separator className="my-6" />
+              </>
+            ) : null}
+            <Controller
+              control={form.control}
               name="privacyPolicy"
               render={({ field, fieldState }) => (
                 <Field aria-invalid={fieldState.invalid}>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                  <FieldLabel htmlFor="booking-form-privacy-policy">
-                    Adatvédelmi szabályzat elfogadása (kötelező)
-                  </FieldLabel>
+                  <div className="flex gap-x-1.5">
+                    <Checkbox
+                      id="booking-form-privacy-policy"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <FieldLabel htmlFor="booking-form-privacy-policy">
+                      Elfogadom az adatvédelmi szabályzatot.
+                      <span className="text-red-500">*</span>
+                    </FieldLabel>
+                  </div>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}

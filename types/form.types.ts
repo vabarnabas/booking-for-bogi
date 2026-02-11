@@ -23,7 +23,7 @@ export const bookingFormSchema = z
     phoneNumber: z
       .string()
       .min(6, { message: "A telefonszám túl rövid." })
-      .refine((value) => /^\+36[1-9][0-9]{8}$/.test(value), {
+      .refine((value) => /^[1-9][0-9]{8}$/.test(value), {
         message: "Érvénytelen telefonszám formátum.",
       }),
     email: z
@@ -40,10 +40,9 @@ export const bookingFormSchema = z
       start: z.string(),
       end: z.string(),
     }),
-    privacyPolicy: z.literal(
-      true,
-      "Az adatvédelmi szabályzat elfogadása kötelező.",
-    ),
+    privacyPolicy: z.boolean().refine((value) => value === true, {
+      message: "Az adatvédelmi szabályzat elfogadása kötelező.",
+    }),
   })
   .and(paymentDetailsSchema);
 

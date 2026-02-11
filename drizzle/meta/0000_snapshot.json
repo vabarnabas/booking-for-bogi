@@ -1,5 +1,5 @@
 {
-  "id": "64087e8d-5cca-45bb-8b07-7721b33eaa9c",
+  "id": "25615db6-9ac9-446b-8568-4b969abd6dbd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -45,6 +45,20 @@
           "primaryKey": false,
           "notNull": true
         },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'scheduled'"
+        },
+        "details": {
+          "name": "details",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
         "customer_id": {
           "name": "customer_id",
           "type": "uuid",
@@ -87,7 +101,14 @@
           "name": "phone_number",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
         },
         "notes": {
           "name": "notes",

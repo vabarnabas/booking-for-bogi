@@ -5,6 +5,8 @@ CREATE TABLE "appointments" (
 	"end_date" timestamp NOT NULL,
 	"notes" text,
 	"event_id" text NOT NULL,
+	"status" text DEFAULT 'scheduled' NOT NULL,
+	"details" jsonb DEFAULT '{}'::jsonb NOT NULL,
 	"customer_id" uuid NOT NULL
 );
 --> statement-breakpoint
@@ -12,6 +14,7 @@ CREATE TABLE "customers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
 	"email" text,
-	"phone_number" text,
+	"phone_number" text NOT NULL,
+	"status" text DEFAULT 'active' NOT NULL,
 	"notes" text
 );
