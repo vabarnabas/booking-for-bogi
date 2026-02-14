@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import type z from "zod";
 import { createService } from "@/actions/service";
 import { createServiceSchema, type Service } from "@/types/service.types";
+import type { ServiceCategory } from "@/types/service-category.types";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
@@ -27,7 +28,13 @@ import {
 } from "../ui/select";
 import { Separator } from "../ui/separator";
 
-export default function NewServiceForm({ services }: { services: Service[] }) {
+export default function NewServiceForm({
+  services,
+  serviceCategories,
+}: {
+  services: Service[];
+  serviceCategories: ServiceCategory[];
+}) {
   const router = useRouter();
   const form = useForm<z.infer<typeof createServiceSchema>>({
     defaultValues: {
@@ -101,13 +108,10 @@ export default function NewServiceForm({ services }: { services: Service[] }) {
               <FieldLabel htmlFor="service-form-type">Típus</FieldLabel>
               <Select
                 id="service-form-type"
-                items={{
-                  "top-level": "Fő szolgáltatás",
-                  type: "Típus",
-                  size: "Méret",
-                  decoration: "Díszítés",
-                  extra: "Extra",
-                }}
+                items={serviceCategories.map((category) => ({
+                  value: category.slug,
+                  label: category.displayName,
+                }))}
                 onValueChange={(value) => field.onChange(value)}
                 value={field.value}
               >
@@ -116,11 +120,11 @@ export default function NewServiceForm({ services }: { services: Service[] }) {
                 </SelectTrigger>
                 <SelectContent alignItemWithTrigger={false}>
                   <SelectGroup>
-                    <SelectItem value="top-level">Fő szolgáltatás</SelectItem>
-                    <SelectItem value="type">Típus</SelectItem>
-                    <SelectItem value="size">Méret</SelectItem>
-                    <SelectItem value="decoration">Díszítés</SelectItem>
-                    <SelectItem value="extra">Extra</SelectItem>
+                    {serviceCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.slug}>
+                        {category.displayName}
+                      </SelectItem>
+                    ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>

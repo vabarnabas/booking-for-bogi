@@ -54,6 +54,12 @@ export const serviceChildToParent = pgTable(
   (table) => [primaryKey({ columns: [table.parentId, table.childId] })],
 );
 
+export const serviceCategories = pgTable("service_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  displayName: text("display_name").notNull(),
+  slug: text("slug").notNull(),
+});
+
 export const customerRelations = relations(customers, ({ many }) => ({
   appointments: many(appointments),
 }));
