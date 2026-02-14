@@ -10,8 +10,7 @@ import type z from "zod";
 import { createAppointment } from "@/actions/appointments";
 import { getTimeSlots } from "@/actions/calendar";
 import useSpinner from "@/hooks/useSpinner";
-import { services } from "@/lib/services";
-import { getTimeFromDate } from "@/lib/utils";
+import { getTimeFromDate, getUniqueServiceTypes } from "@/lib/utils";
 import { bookingFormSchema } from "@/types/form.types";
 import type { Service } from "@/types/service.types";
 import BookingDetails from "../booking-details/booking-details";
@@ -37,9 +36,16 @@ import {
 } from "../ui/select";
 import { Separator } from "../ui/separator";
 
-export default function BookingForm() {
+export default function BookingForm({
+  services,
+}: {
+  services: (Service & { parent: { parentId: string }[] })[];
+}) {
   const router = useRouter();
   const { spinnerComponent, startLoading, stopLoading } = useSpinner();
+
+  const [serviceId, setServiceId] = React.useState<string | null>(null);
+
   const form = useForm<z.infer<typeof bookingFormSchema>>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -51,6 +57,9 @@ export default function BookingForm() {
       options: [],
     },
   });
+
+  console.log(form.formState.errors);
+  console.log(form.getValues());
 
   const service = form.watch("service");
   const options = form.watch("options");
@@ -72,7 +81,7 @@ export default function BookingForm() {
         return acc + (service.price || 0);
       }, 0)
     );
-  }, [options, service]);
+  }, [options, service, services]);
 
   const totalTime = React.useMemo(() => {
     return (
@@ -82,7 +91,7 @@ export default function BookingForm() {
         return acc + (service.duration || 0);
       }, 0)
     );
-  }, [options, service]);
+  }, [options, service, services]);
 
   const onSubmit = form.handleSubmit(async (data) => {
     startLoading();
@@ -145,107 +154,44 @@ export default function BookingForm() {
                         form.setValue("options", []);
                       }
                       form.setValue("service", localService.name);
+                      setServiceId(localService.id);
                     }}
                   />
                 ))}
             </div>
-            {form.getValues("service") === "Manikűr" ? (
-              <>
-                <Separator className="my-6" />
-                <p className="mb-6 font-semibold text-2xl">
-                  Szolgáltatás Tipusa
-                </p>
-                <div className="w-full space-y-2">
-                  {services
-                    .filter((service) => service.type === "type")
-                    .map((service) => (
-                      <ServiceButton
-                        key={service.name}
-                        isSelected={options.some(
-                          (s) =>
-                            s.type === service.type && s.name === service.name,
-                        )}
-                        service={service}
-                        onClick={() => selectServiceByCategory(service)}
-                      />
-                    ))}
-                </div>
-              </>
-            ) : null}
-
-            {form.getValues("service") === "Műkörömépítés" ? (
-              <>
-                <Separator className="my-6" />
-
-                <p className="mb-6 font-semibold text-2xl">Válassz Méretet!</p>
-                <div className="w-full space-y-2">
-                  {services
-                    .filter((service) => service.type === "size")
-                    .map((service) => (
-                      <ServiceButton
-                        key={service.name}
-                        isSelected={options.some(
-                          (s) =>
-                            s.type === service.type && s.name === service.name,
-                        )}
-                        service={service}
-                        onClick={() => {
-                          selectServiceByCategory(service);
-                        }}
-                      />
-                    ))}
-                </div>
-              </>
-            ) : null}
-            {form.getValues("service") === "Műkörömépítés" ||
-            form.getValues("service") === "Géllakk" ? (
-              <>
-                <Separator className="my-6" />
-                <p className="mb-6 font-semibold text-2xl">
-                  Válassz Diszitést!
-                </p>
-                <div className="w-full space-y-2">
-                  {services
-                    .filter((service) => service.type === "decoration")
-                    .map((service) => (
-                      <ServiceButton
-                        key={service.name}
-                        isSelected={options.some(
-                          (s) =>
-                            s.type === service.type && s.name === service.name,
-                        )}
-                        service={service}
-                        onClick={() => selectServiceByCategory(service)}
-                      />
-                    ))}
-                </div>
-              </>
-            ) : null}
-            {form.getValues("service") === "Műkörömépítés" ||
-            form.getValues("service") === "Géllakk" ? (
-              <>
-                <Separator className="my-6" />
-                <p className="mb-6 font-semibold text-2xl">
-                  Válassz Extra Szolgáltatást!
-                </p>
-                <div className="w-full space-y-2">
-                  {services
-                    .filter((service) => service.type === "extra")
-                    .map((service) => (
-                      <ServiceButton
-                        key={service.name}
-                        isSelected={options.some(
-                          (s) =>
-                            s.type === service.type && s.name === service.name,
-                        )}
-                        service={service}
-                        onClick={() => {
-                          selectServiceByCategory(service);
-                        }}
-                      />
-                    ))}
-                </div>
-              </>
+            {serviceId ? (
+              <div className="space-y-6">
+                {getUniqueServiceTypes(
+                  services.filter((s) =>
+                    s.parent.some((parent) => parent.parentId === serviceId),
+                  ),
+                ).map((uniqueType) =>
+                  services.filter((s) => s.type === uniqueType).length > 0 ? (
+                    <div key={uniqueType} className="">
+                      <Separator className="my-6" />
+                      <p className="mb-6 font-semibold text-2xl">
+                        {uniqueType}
+                      </p>
+                      <div className="space-y-2">
+                        {services
+                          .filter((s) => s.type === uniqueType)
+                          .map((s) => (
+                            <ServiceButton
+                              key={s.name}
+                              service={s}
+                              isSelected={options.some(
+                                (option) =>
+                                  option.name === s.name &&
+                                  option.type === s.type,
+                              )}
+                              onClick={() => selectServiceByCategory(s)}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  ) : null,
+                )}
+              </div>
             ) : null}
             <Separator className="my-6" />
             <div className="mb-4">
@@ -261,15 +207,16 @@ export default function BookingForm() {
               type="button"
               size={"lg"}
               disabled={
-                !(
-                  service &&
-                  services.find(
-                    (s) => s.type === "top-level" && s.name === service,
-                  )?.optionCount &&
-                  services.find(
-                    (s) => s.type === "top-level" && s.name === service,
-                  )?.optionCount === options.length
-                )
+                getUniqueServiceTypes(
+                  services.filter((s) =>
+                    s.parent.some((parent) => parent.parentId === serviceId),
+                  ),
+                ).length !== 0 &&
+                getUniqueServiceTypes(
+                  services.filter((s) =>
+                    s.parent.some((parent) => parent.parentId === serviceId),
+                  ),
+                ).length !== options.length
               }
               onClick={() => setFormPage((prev) => prev + 1)}
             >

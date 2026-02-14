@@ -47,7 +47,9 @@ export default async function ServicesPage() {
                     </p>
                     <div className="mt-4 space-y-2">
                       {Array.from(
-                        new Set(service.children.map((child) => child.type)),
+                        new Set(
+                          service.children.map(({ child }) => child.type),
+                        ),
                       ).map((uniqueType) => (
                         <div key={uniqueType} className="rounded-md border p-3">
                           <p className="font-semibold text-lg">
@@ -56,8 +58,8 @@ export default async function ServicesPage() {
                           <Separator className="my-3" />
                           <div className="mt-2 space-y-1">
                             {service.children
-                              .filter((child) => child.type === uniqueType)
-                              .map((child) => (
+                              .filter(({ child }) => child.type === uniqueType)
+                              .map(({ child }) => (
                                 <div
                                   key={child.id}
                                   className="flex flex-col justify-between gap-2 md:flex-row md:items-center"

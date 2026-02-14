@@ -1,7 +1,9 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import React from "react";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type z from "zod";
 import { createService } from "@/actions/service";
@@ -23,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Separator } from "../ui/separator";
 
 export default function NewServiceForm({ services }: { services: Service[] }) {
   const router = useRouter();
@@ -30,24 +33,33 @@ export default function NewServiceForm({ services }: { services: Service[] }) {
     defaultValues: {
       name: "",
       type: "top-level",
-      duration: undefined,
-      price: undefined,
+      duration: "0",
+      price: "0",
+      parentIds: [],
     },
     resolver: zodResolver(createServiceSchema),
+  });
+
+  const parentIds = useFieldArray({
+    control: form.control,
+    name: "parentIds",
   });
 
   const onSubmit = form.handleSubmit(async (data) => {
     const toastId = toast.loading("Szolgáltatás létrehozása folyamatban...");
 
-    if (data.type !== "top-level" && !data.parentId) {
-      toast.error("Kérem válassza ki a szülő szolgáltatást.", { id: toastId });
-      return;
-    }
-
     try {
+      if (data.price === "0") {
+        data.price = undefined;
+      }
+
+      if (data.duration === "0") {
+        data.duration = undefined;
+      }
+
       await createService(data);
       toast.success("Sikeres szolgáltatás létrehozás!", { id: toastId });
-      router.push("/dashboard/services");
+      await router.push("/dashboard/services");
     } catch {
       toast.error("Hiba történt a szolgáltatás létrehozása során.", {
         id: toastId,
@@ -56,6 +68,10 @@ export default function NewServiceForm({ services }: { services: Service[] }) {
   });
 
   form.watch();
+
+  React.useEffect(() => {
+    form.reset();
+  }, [form]);
 
   return (
     <form
@@ -93,7 +109,7 @@ export default function NewServiceForm({ services }: { services: Service[] }) {
                   extra: "Extra",
                 }}
                 onValueChange={(value) => field.onChange(value)}
-                defaultValue={field.value}
+                value={field.value}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -112,51 +128,59 @@ export default function NewServiceForm({ services }: { services: Service[] }) {
             </Field>
           )}
         />
-        <Controller
-          control={form.control}
-          name="price"
-          render={({ field, fieldState }) => (
-            <Field aria-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="service-form-price">Ár</FieldLabel>
-              <InputGroup>
-                <InputGroupInput
-                  id="service-form-duration"
-                  type="number"
-                  {...field}
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupText>Ft</InputGroupText>
-                </InputGroupAddon>
-              </InputGroup>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-        <Controller
-          control={form.control}
-          name="duration"
-          render={({ field, fieldState }) => (
-            <Field aria-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="service-form-duration">Időtartam</FieldLabel>
-              <InputGroup>
-                <InputGroupInput
-                  id="service-form-duration"
-                  type="number"
-                  {...field}
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupText>perc</InputGroupText>
-                </InputGroupAddon>
-              </InputGroup>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-        {form.getValues("type") !== "top-level" ? (
+        <div className="flex flex-col gap-4 md:flex-row">
           <Controller
             control={form.control}
-            name="parentId"
+            name="price"
             render={({ field, fieldState }) => (
+              <Field aria-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="service-form-price">Ár</FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id="service-form-duration"
+                    type="number"
+                    {...field}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupText>Ft</InputGroupText>
+                  </InputGroupAddon>
+                </InputGroup>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="duration"
+            render={({ field, fieldState }) => (
+              <Field aria-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="service-form-duration">
+                  Időtartam
+                </FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id="service-form-duration"
+                    type="number"
+                    {...field}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupText>perc</InputGroupText>
+                  </InputGroupAddon>
+                </InputGroup>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </div>
+        {form.watch("type") !== "top-level" ? (
+          <Controller
+            control={form.control}
+            name="parentIds"
+            render={({ fieldState }) => (
               <Field aria-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="service-form-parentId">
                   Szülő Szolgáltatás
@@ -167,8 +191,18 @@ export default function NewServiceForm({ services }: { services: Service[] }) {
                     value: service.id,
                     label: service.name,
                   }))}
-                  onValueChange={(value) => field.onChange(value)}
-                  defaultValue={field.value}
+                  onValueChange={(value) => {
+                    if (
+                      !parentIds.fields.some(
+                        (field) => field.parentId === value,
+                      )
+                    ) {
+                      parentIds.append({ id: value, parentId: value } as {
+                        id: string;
+                        parentId: string;
+                      });
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -183,6 +217,32 @@ export default function NewServiceForm({ services }: { services: Service[] }) {
                     </SelectGroup>
                   </SelectContent>
                 </Select>
+                {parentIds.fields.length > 0 ? (
+                  <div className="">
+                    <Separator className="my-4" />
+                    {parentIds.fields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <p className="">
+                          {
+                            services.find(
+                              (service) => service.id === field.parentId,
+                            )?.name
+                          }
+                        </p>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => parentIds.remove(index)}
+                        >
+                          <X className="text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}

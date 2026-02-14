@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { Service } from "@/types/service.types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -100,4 +101,9 @@ export function formatCurrency(amount: number) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+export function getUniqueServiceTypes(services: Service[]) {
+  const uniqueTypes = new Set(services.map((service) => service.type));
+  return Array.from(uniqueTypes);
 }

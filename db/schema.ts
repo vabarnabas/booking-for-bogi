@@ -3,6 +3,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -42,9 +43,16 @@ export const services = pgTable("services", {
   duration: integer("duration"),
   price: integer("price"),
   image: text("image"),
-
-  parentId: uuid("parent_id"),
 });
+
+export const serviceChildToParent = pgTable(
+  "service_child_to_parent",
+  {
+    parentId: uuid("parent_id").notNull(),
+    childId: uuid("child_id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.parentId, table.childId] })],
+);
 
 export const customerRelations = relations(customers, ({ many }) => ({
   appointments: many(appointments),
@@ -57,13 +65,27 @@ export const appointmentRelations = relations(appointments, ({ one }) => ({
   }),
 }));
 
-export const serviceRelations = relations(services, ({ one, many }) => ({
-  parent: one(services, {
-    fields: [services.parentId],
-    references: [services.id],
-    relationName: "serviceHierarchy",
+export const serviceRelations = relations(services, ({ many }) => ({
+  parent: many(serviceChildToParent, {
+    relationName: "parentToChild",
   }),
-  children: many(services, {
-    relationName: "serviceHierarchy",
+  children: many(serviceChildToParent, {
+    relationName: "childToParent",
   }),
 }));
+
+export const serviceChildToParentRelations = relations(
+  serviceChildToParent,
+  ({ one }) => ({
+    parent: one(services, {
+      fields: [serviceChildToParent.parentId],
+      references: [services.id],
+      relationName: "childToParent",
+    }),
+    child: one(services, {
+      fields: [serviceChildToParent.childId],
+      references: [services.id],
+      relationName: "parentToChild",
+    }),
+  }),
+);

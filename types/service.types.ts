@@ -6,8 +6,7 @@ export const serviceSchema = z.object({
   type: z.string(),
   price: z.number().nullable(),
   duration: z.number().nullable(),
-  image: z.string().optional(),
-  parentId: z.string().optional(),
+  image: z.string().nullable(),
 });
 
 export type Service = z.infer<typeof serviceSchema>;
@@ -18,16 +17,19 @@ const baseServiceSchema = z.object({
   price: z.string().optional(),
   duration: z.string().optional(),
   image: z.string().optional(),
-  parentId: z.string().optional(),
+  parentIds: z
+    .array(z.object({ id: z.string(), parentId: z.string() }))
+    .optional(),
 });
 
 // Create schema with conditional parentId
 export const createServiceSchema = baseServiceSchema.refine(
   (data) =>
-    data.type === "top-level" || (!!data.parentId && data.parentId.length > 0),
+    data.type === "top-level" ||
+    (!!data.parentIds && data.parentIds.length > 0),
   {
     message:
-      'Válassz szülő szolgáltatást, ha nem "Fő szolgáltatás" típusú a szolgáltatás.',
+      'Válassz legalább egy szülő szolgáltatást, ha nem "Fő szolgáltatás" típusú a szolgáltatás.',
     path: ["parentId"],
   },
 );
