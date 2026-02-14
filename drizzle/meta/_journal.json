@@ -8,6 +8,13 @@
       "when": 1770810859062,
       "tag": "0000_flowery_joshua_kane",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771071801183,
+      "tag": "0001_far_king_cobra",
+      "breakpoints": true
     }
   ]
 }

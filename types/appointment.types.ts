@@ -26,7 +26,9 @@ export const createAppointmentSchema = z.object({
   service: z.string(),
   timeFrame: z.number(),
 
-  startDate: z.string(),
+  status: z.string().optional(),
+
+  startDate: z.date(),
 
   details: z
     .object({
@@ -40,3 +42,7 @@ export const createAppointmentSchema = z.object({
 });
 
 export type CreateAppointment = z.infer<typeof createAppointmentSchema>;
+
+export const updateAppointmentSchema = createAppointmentSchema.partial();
+
+export type UpdateAppointment = z.infer<typeof updateAppointmentSchema>;

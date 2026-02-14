@@ -60,7 +60,7 @@ export default function BookingForm() {
     form.setValue("options", [...filtered, service]);
   };
   const [timeSlots, setTimeSlots] = React.useState<
-    { start: string; end: string }[]
+    { start: Date; end: Date }[]
   >([]);
 
   const [formPage, setFormPage] = React.useState(0);
@@ -122,6 +122,8 @@ export default function BookingForm() {
   });
 
   form.watch();
+
+  console.log(form.getValues("timeSlot"));
 
   return (
     <form id="booking-form" onSubmit={onSubmit} className="w-full max-w-lg">
@@ -323,7 +325,7 @@ export default function BookingForm() {
                       form.setValue("timeSlot", slot);
                       setFormPage(2);
                     }}
-                    key={slot.start}
+                    key={slot.start.toISOString()}
                   >
                     {getTimeFromDate(new Date(slot.start))}
                   </Button>

@@ -36,8 +36,8 @@ export const bookingFormSchema = z
         { message: "Hibás email formátum." },
       ),
     timeSlot: z.object({
-      start: z.string(),
-      end: z.string(),
+      start: z.date(),
+      end: z.date(),
     }),
     privacyPolicy: z.boolean().refine((value) => value === true, {
       message: "Az adatvédelmi szabályzat elfogadása kötelező.",

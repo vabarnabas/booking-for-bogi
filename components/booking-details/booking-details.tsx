@@ -14,7 +14,7 @@ export default function BookingDetails({
   options: Service[];
   totalTime: number;
   totalCost: number;
-  startDate?: string;
+  startDate?: Date;
 }) {
   return (
     <div className="space-y-1 rounded-md border bg-secondary p-3">

@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { updateAppointmentStatus } from "@/actions/appointments";
+import { updateAppointment } from "@/actions/appointments";
 import {
   Select,
   SelectContent,
@@ -30,7 +30,7 @@ export default function AppointmentStatusSelector({
     const toastId = toast.loading("Foglalás állapotának frissítése...");
 
     try {
-      await updateAppointmentStatus(appointmentId, value);
+      await updateAppointment(appointmentId, { status: value });
       toast.success("Foglalás állapotának frissítése sikeres!", {
         id: toastId,
       });
