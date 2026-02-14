@@ -41,8 +41,9 @@ export const services = pgTable("services", {
   type: text("type").notNull(),
   duration: integer("duration"),
   price: integer("price"),
-  optionCount: integer("option_count"),
   image: text("image"),
+
+  parentId: uuid("parent_id"),
 });
 
 export const customerRelations = relations(customers, ({ many }) => ({
@@ -53,5 +54,16 @@ export const appointmentRelations = relations(appointments, ({ one }) => ({
   customer: one(customers, {
     fields: [appointments.customerId],
     references: [customers.id],
+  }),
+}));
+
+export const serviceRelations = relations(services, ({ one, many }) => ({
+  parent: one(services, {
+    fields: [services.parentId],
+    references: [services.id],
+    relationName: "serviceHierarchy",
+  }),
+  children: many(services, {
+    relationName: "serviceHierarchy",
   }),
 }));
