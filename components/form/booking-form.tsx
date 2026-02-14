@@ -45,6 +45,9 @@ export default function BookingForm({
   const { spinnerComponent, startLoading, stopLoading } = useSpinner();
 
   const [serviceId, setServiceId] = React.useState<string | null>(null);
+  const [uniqueServiceTypes, setUniqueServiceTypes] = React.useState<string[]>(
+    [],
+  );
 
   const form = useForm<z.infer<typeof bookingFormSchema>>({
     resolver: zodResolver(bookingFormSchema),
@@ -155,42 +158,49 @@ export default function BookingForm({
                       }
                       form.setValue("service", localService.name);
                       setServiceId(localService.id);
+                      setUniqueServiceTypes(
+                        getUniqueServiceTypes(
+                          services.filter((s) =>
+                            s.parent.some(
+                              (parent) => parent.parentId === localService.id,
+                            ),
+                          ),
+                        ),
+                      );
                     }}
                   />
                 ))}
             </div>
             {serviceId ? (
               <div className="space-y-6">
-                {getUniqueServiceTypes(
-                  services.filter((s) =>
-                    s.parent.some((parent) => parent.parentId === serviceId),
-                  ),
-                ).map((uniqueType) =>
-                  services.filter((s) => s.type === uniqueType).length > 0 ? (
-                    <div key={uniqueType} className="">
-                      <Separator className="my-6" />
-                      <p className="mb-6 font-semibold text-2xl">
-                        {uniqueType}
-                      </p>
-                      <div className="space-y-2">
-                        {services
-                          .filter((s) => s.type === uniqueType)
-                          .map((s) => (
-                            <ServiceButton
-                              key={s.name}
-                              service={s}
-                              isSelected={options.some(
-                                (option) =>
-                                  option.name === s.name &&
-                                  option.type === s.type,
-                              )}
-                              onClick={() => selectServiceByCategory(s)}
-                            />
-                          ))}
+                {uniqueServiceTypes
+                  .slice(0, options.length + 1)
+                  .map((uniqueType) =>
+                    services.filter((s) => s.type === uniqueType).length > 0 ? (
+                      <div key={uniqueType} className="">
+                        <Separator className="my-6" />
+                        <p className="mb-6 font-semibold text-2xl">
+                          {uniqueType}
+                        </p>
+                        <div className="space-y-2">
+                          {services
+                            .filter((s) => s.type === uniqueType)
+                            .map((s) => (
+                              <ServiceButton
+                                key={s.name}
+                                service={s}
+                                isSelected={options.some(
+                                  (option) =>
+                                    option.name === s.name &&
+                                    option.type === s.type,
+                                )}
+                                onClick={() => selectServiceByCategory(s)}
+                              />
+                            ))}
+                        </div>
                       </div>
-                    </div>
-                  ) : null,
-                )}
+                    ) : null,
+                  )}
               </div>
             ) : null}
             <Separator className="my-6" />
@@ -207,16 +217,9 @@ export default function BookingForm({
               type="button"
               size={"lg"}
               disabled={
-                getUniqueServiceTypes(
-                  services.filter((s) =>
-                    s.parent.some((parent) => parent.parentId === serviceId),
-                  ),
-                ).length !== 0 &&
-                getUniqueServiceTypes(
-                  services.filter((s) =>
-                    s.parent.some((parent) => parent.parentId === serviceId),
-                  ),
-                ).length !== options.length
+                !service ||
+                (uniqueServiceTypes.length !== 0 &&
+                  uniqueServiceTypes.length !== options.length)
               }
               onClick={() => setFormPage((prev) => prev + 1)}
             >
