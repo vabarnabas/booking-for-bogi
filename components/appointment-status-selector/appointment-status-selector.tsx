@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { toast } from "sonner";
 import { updateAppointment } from "@/actions/appointments";
 import {
@@ -24,6 +25,7 @@ export default function AppointmentStatusSelector({
   appointmentId: string;
   defaultValue?: string;
 }) {
+  const [value, setValue] = React.useState(defaultValue);
   const onValueChange = async (value: string | null) => {
     if (!value) return;
 
@@ -31,6 +33,7 @@ export default function AppointmentStatusSelector({
 
     try {
       await updateAppointment(appointmentId, { status: value });
+      setValue(value);
       toast.success("Foglalás állapotának frissítése sikeres!", {
         id: toastId,
       });
@@ -40,11 +43,7 @@ export default function AppointmentStatusSelector({
   };
 
   return (
-    <Select
-      items={statuses}
-      onValueChange={onValueChange}
-      defaultValue={defaultValue}
-    >
+    <Select items={statuses} onValueChange={onValueChange} value={value}>
       <SelectTrigger className="bg-background">
         <SelectValue />
       </SelectTrigger>
