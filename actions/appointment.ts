@@ -11,6 +11,7 @@ import type {
   UpdateAppointment,
 } from "@/types/appointment.types";
 import type { Customer } from "@/types/customer.types";
+import { sendEmail } from "./email";
 
 export async function getAppointments() {
   "use cache";
@@ -138,6 +139,8 @@ export async function createAppointment(dto: CreateAppointment) {
         status: dto.status,
       })
       .returning();
+
+    await sendEmail(dto);
     updateTag("/appointments");
     return appointment as Appointment;
   } catch (error) {

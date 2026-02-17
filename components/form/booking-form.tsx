@@ -7,7 +7,7 @@ import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type z from "zod";
-import { createAppointment } from "@/actions/appointments";
+import { createAppointment } from "@/actions/appointment";
 import { getTimeSlots } from "@/actions/calendar";
 import { getDataPrivacyFile } from "@/actions/file";
 import useSpinner from "@/hooks/useSpinner";
@@ -501,37 +501,36 @@ export default function BookingForm({
               name="privacyPolicy"
               render={({ field, fieldState }) => (
                 <Field aria-invalid={fieldState.invalid}>
-                  <div className="flex gap-x-1.5">
+                  <div className="flex items-center gap-x-1.5">
                     <Checkbox
                       id="booking-form-privacy-policy"
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
-                    <FieldLabel
-                      htmlFor="booking-form-privacy-policy"
-                      className=""
-                    >
-                      Elfogadom az
-                      <button
-                        type="button"
-                        className="text-primary underline"
-                        onClick={async () => {
-                          const fileBase64 = await getDataPrivacyFile();
+                    <FieldLabel htmlFor="booking-form-privacy-policy">
+                      <p className="">
+                        Elfogadom az{" "}
+                        <button
+                          type="button"
+                          className="text-primary underline"
+                          onClick={async () => {
+                            const fileBase64 = await getDataPrivacyFile();
 
-                          const buffer = Buffer.from(fileBase64, "base64");
+                            const buffer = Buffer.from(fileBase64, "base64");
 
-                          const blob = new Blob([buffer], {
-                            type: "application/pdf",
-                          });
+                            const blob = new Blob([buffer], {
+                              type: "application/pdf",
+                            });
 
-                          const url = URL.createObjectURL(blob);
+                            const url = URL.createObjectURL(blob);
 
-                          window.open(url, "_blank", "noopener");
-                        }}
-                      >
-                        Adatvédelmi Tájékoztatót
-                      </button>
-                      <span className="text-red-500">*</span>
+                            window.open(url, "_blank", "noopener");
+                          }}
+                        >
+                          Adatkezelési Tájékoztatót
+                        </button>{" "}
+                        <span className="text-red-500">*</span>
+                      </p>
                     </FieldLabel>
                   </div>
                   {fieldState.invalid && (

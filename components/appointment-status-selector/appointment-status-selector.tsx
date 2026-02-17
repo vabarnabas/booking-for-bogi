@@ -2,7 +2,7 @@
 
 import React from "react";
 import { toast } from "sonner";
-import { updateAppointment } from "@/actions/appointments";
+import { updateAppointment } from "@/actions/appointment";
 import {
   Select,
   SelectContent,

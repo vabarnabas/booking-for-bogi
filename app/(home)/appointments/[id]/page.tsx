@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAppointmentById } from "@/actions/appointments";
+import { getAppointmentById } from "@/actions/appointment";
 import CustomMap from "@/components/map/map";
 import { Separator } from "@/components/ui/separator";
 import { formatDateTime, getTimeFromDate } from "@/lib/utils";

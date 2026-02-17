@@ -2,7 +2,7 @@ import { Calendar, UserIcon } from "lucide-react";
 import Link from "next/link";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getAppointments } from "@/actions/appointments";
+import { getAppointments } from "@/actions/appointment";
 import AppointmentStatusSelector from "@/components/appointment-status-selector/appointment-status-selector";
 import EmptyState from "@/components/empty-state/empty-state";
 import { Separator } from "@/components/ui/separator";
