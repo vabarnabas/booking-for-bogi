@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import type z from "zod";
 import { createAppointment } from "@/actions/appointments";
 import { getTimeSlots } from "@/actions/calendar";
+import { getDataPrivacyFile } from "@/actions/file";
 import useSpinner from "@/hooks/useSpinner";
 import { getTimeFromDate, getUniqueServiceTypes } from "@/lib/utils";
 import { bookingFormSchema } from "@/types/form.types";
@@ -507,17 +507,31 @@ export default function BookingForm({
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
-                    <FieldLabel htmlFor="booking-form-privacy-policy">
+                    <FieldLabel
+                      htmlFor="booking-form-privacy-policy"
+                      className=""
+                    >
                       Elfogadom az
-                      <Link
-                        href="/docs/adatkezelesi-tajekoztato.pdf"
-                        target="_blank"
-                        rel="noopener"
+                      <button
+                        type="button"
                         className="text-primary underline"
+                        onClick={async () => {
+                          const fileBase64 = await getDataPrivacyFile();
+
+                          const buffer = Buffer.from(fileBase64, "base64");
+
+                          const blob = new Blob([buffer], {
+                            type: "application/pdf",
+                          });
+
+                          const url = URL.createObjectURL(blob);
+
+                          window.open(url, "_blank", "noopener");
+                        }}
                       >
                         Adatvédelmi Tájékoztatót
-                      </Link>
-                      .<span className="text-red-500">*</span>
+                      </button>
+                      <span className="text-red-500">*</span>
                     </FieldLabel>
                   </div>
                   {fieldState.invalid && (
