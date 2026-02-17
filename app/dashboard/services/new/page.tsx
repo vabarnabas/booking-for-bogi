@@ -8,9 +8,6 @@ export default async function NewServicePage() {
     getServiceCategories(),
   ]);
 
-  console.log("Fetched services:", services);
-  console.log("Fetched service categories:", serviceCategories);
-
   return (
     <div className="w-full">
       <NewServiceForm

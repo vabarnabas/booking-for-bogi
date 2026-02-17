@@ -62,9 +62,6 @@ export default function BookingForm({
     },
   });
 
-  console.log(form.formState.errors);
-  console.log(form.getValues());
-
   const service = form.watch("service");
   const options = form.watch("options");
 
@@ -136,8 +133,6 @@ export default function BookingForm({
 
   form.watch();
 
-  console.log(form.getValues("timeSlot"));
-
   return (
     <form id="booking-form" onSubmit={onSubmit} className="w-full max-w-lg">
       {formPage === 0 ? (
@@ -154,7 +149,6 @@ export default function BookingForm({
                     service={localService}
                     onClick={() => {
                       if (form.getValues("service") !== localService.name) {
-                        console.log("Resetting options");
                         form.setValue("options", []);
                       }
                       form.setValue("service", localService.name);

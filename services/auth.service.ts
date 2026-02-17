@@ -65,10 +65,6 @@ async function login(identifier: string, password: string) {
 
   const isValid = await verifyPassword(password, user.password);
 
-  console.log(
-    `Login attempt for user "${identifier}": ${isValid ? "success" : "failure"}`,
-  );
-
   if (!isValid) {
     throw new Error("Invalid password");
   }
