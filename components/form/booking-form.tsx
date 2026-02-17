@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -513,8 +514,16 @@ export default function BookingForm({
                       onCheckedChange={field.onChange}
                     />
                     <FieldLabel htmlFor="booking-form-privacy-policy">
-                      Elfogadom az adatvédelmi szabályzatot.
-                      <span className="text-red-500">*</span>
+                      Elfogadom az
+                      <Link
+                        href="/docs/adatkezelesi-tajekoztato.pdf"
+                        target="_blank"
+                        rel="noopener"
+                        className="text-primary underline"
+                      >
+                        Adatvédelmi Tájékoztatót
+                      </Link>
+                      .<span className="text-red-500">*</span>
                     </FieldLabel>
                   </div>
                   {fieldState.invalid && (

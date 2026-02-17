@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import PlausibleProvider from "next-plausible";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -30,7 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-dvh grow antialiased`}
       >
-        {children}
+        <PlausibleProvider
+          domain="bogi.barnicloud.cc"
+          customDomain={process.env.ANALYTICS_URL}
+        >
+          {children}
+        </PlausibleProvider>
         <Toaster />
       </body>
     </html>
